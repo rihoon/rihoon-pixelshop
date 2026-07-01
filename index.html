@@ -26,9 +26,8 @@ var dest=item?item.url:"https://smartstore.naver.com/rihoon";
 var qs=params.toString();              // 원본 파라미터(nt_*) 전부 그대로 전달
 if(qs)dest+=(dest.indexOf('?')>=0?'&':'?')+qs;
 
-// 픽셀 이벤트가 '실제 전송'되는 즉시 이동(보통 0.2~0.4초). fbevents.js가 로드되면 fbq.callMethod가
-// 생기고 큐가 flush됨 → 그 신호를 폴링해 로드 즉시 120ms 뒤 이동. 느린망/차단 대비 최대 0.9초 안전캡.
-// (기존 고정 700ms 대체 — 체감 대기 단축, 픽셀 신뢰도는 유지)
+// 픽셀 이벤트가 실제 전송되는 즉시 이동(보통 0.2~0.4초). fbevents.js 로드신호(fbq.callMethod) 폴링,
+// 로드되면 120ms 뒤 이동. 느린망/차단 대비 최대 0.9초 안전캡.
 var gone=false,t0=Date.now();
 function go(){if(gone)return;gone=true;location.replace(dest);}
 (function w(){if(window.fbq&&fbq.callMethod){setTimeout(go,120);}else if(Date.now()-t0>900){go();}else{setTimeout(w,60);}})();
