@@ -32,6 +32,7 @@ select:focus,input:focus{outline:none;border-color:var(--accent);background:#fff
 .save-row .btn{flex:1;padding:12px;font-size:14px}
 .hint{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5}
 .primary .k{color:var(--accent)}.primary{border-color:#d4d4d4;background:#fff}
+.pxbadge{font-weight:700;font-size:11px;margin-left:2px;color:var(--sub)}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 th{color:var(--sub);font-weight:700;font-size:11px}
@@ -59,7 +60,7 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 
 <div class="card">
   <div class="outbox primary">
-    <div class="k">픽셀샵 광고 URL <button class="btn" data-t="ps">복사</button></div>
+    <div class="k"><span>픽셀샵 광고 URL <span id="pxbadge" class="pxbadge"></span></span><span><button class="btn" data-open="ps">열기(테스트)</button> <button class="btn" data-t="ps">복사</button></span></div>
     <div class="v" id="ps"></div>
   </div>
   <div class="outbox">
@@ -89,6 +90,15 @@ var MEDIA=[{"code": "traffic", "label": "기본"}, {"code": "traffic_b", "label"
 var SOURCES=[{"code": "facebook", "label": "페이스북"}, {"code": "facebook_co", "label": "페이스북(자사몰)"}];
 var LSKEY='rihoon_linkbuilder_saved';
 var $=function(i){return document.getElementById(i)};
+var PXKEYS=null;  // 픽셀샵 index.html 제품맵 키(등록여부 확인용)
+function loadPixelshop(){
+  fetch('index.html',{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){
+    var m=t.match(/var MAP=(\{[\s\S]*?\});/);PXKEYS={};
+    if(m){try{var o=JSON.parse(m[1]);Object.keys(o).forEach(function(k){PXKEYS[k]=1})}catch(e){}}
+    gen();renderSaved();
+  }).catch(function(){PXKEYS=null});}
+function pxLabel(slug){if(PXKEYS===null)return '<span class="pxbadge">…</span>';
+  return PXKEYS[slug]?'<span class="pxbadge">✅ 등록</span>':'<span class="pxbadge">⚠️ 미등록</span>';}
 
 function fillMedia(){
   SOURCES.forEach(function(s){var o=document.createElement('option');o.value=s.code;o.textContent=s.label+' ('+s.code+')';$('src').appendChild(o)});
@@ -109,11 +119,13 @@ function mkqs(slug,src,med,kw){return 'nt_source='+encodeURIComponent(src)+'&nt_
 
 function gen(){
   var p=curProd();var kw=$('kw').value.trim();var src=$('src').value;var med=$('med').value;
+  var b=$('pxbadge');
   $('plink').textContent=p&&p.link?('마케팅링크: '+p.link):'⚠️ 이 제품은 마케팅링크가 없어요(출시예정/품절)';
-  if(!p||!p.slug){$('ps').textContent='';$('raw').textContent='';return;}
+  if(!p||!p.slug){$('ps').textContent='';$('raw').textContent='';if(b)b.textContent='';return;}
   var qs=mkqs(p.slug,src,med,kw);
   $('ps').textContent=PIXELSHOP+'?'+qs;
-  $('raw').textContent=p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'(마케팅링크 없음)';}
+  $('raw').textContent=p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'(마케팅링크 없음)';
+  if(b)b.innerHTML=(PXKEYS===null)?'':(PXKEYS[p.slug]?'✅ 픽셀샵 등록됨':'⚠️ 픽셀샵 미등록·deploy 필요');}
 
 // ── 저장(localStorage) ──
 function load(){try{return JSON.parse(localStorage.getItem(LSKEY)||'[]')}catch(e){return[]}}
@@ -124,11 +136,12 @@ function renderSaved(){
   var a=load();$('cnt').textContent=a.length?('('+a.length+')'):'';
   var w=$('savedwrap');
   if(!a.length){w.innerHTML='<div class="empty">아직 저장한 링크가 없어요. 위에서 만들고 <b>＋ 이 링크 저장</b>을 누르세요.</div>';return;}
-  var h='<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>담당자</th><th>픽셀샵 URL</th><th></th><th></th></tr></thead><tbody>';
+  var h='<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>픽셀샵</th><th>URL</th><th></th><th></th><th></th></tr></thead><tbody>';
   a.forEach(function(r,i){
-    h+='<tr><td>'+esc(r.ts)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.kw)+'</td><td>'+esc(r.med)+
+    h+='<tr><td>'+esc(r.ts)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.kw)+'</td><td>'+pxLabel(r.slug)+
        '</td><td class="u">'+esc(r.ps)+'</td>'+
        '<td><button class="btn mini" data-copy="'+i+'">복사</button></td>'+
+       '<td><button class="btn mini" data-openi="'+i+'">열기</button></td>'+
        '<td><button class="btn mini" data-del="'+i+'">삭제</button></td></tr>';
   });
   h+='</tbody></table>';w.innerHTML=h;}
@@ -159,6 +172,8 @@ document.addEventListener('click',function(e){
   var t=e.target;
   if(t.classList.contains('btn')&&t.dataset.t){var v=$(t.dataset.t).textContent;if(v)navigator.clipboard.writeText(v).then(function(){t.textContent='복사됨';t.classList.add('done');setTimeout(function(){t.textContent='복사';t.classList.remove('done')},1100)});return;}
   if(t.dataset.copy!=null){var a=load();var r=a[+t.dataset.copy];if(r)navigator.clipboard.writeText(r.ps).then(function(){t.textContent='✓';setTimeout(function(){t.textContent='복사'},900)});return;}
+  if(t.dataset.open){var u=$(t.dataset.open).textContent;if(u)window.open(u,'_blank');return;}
+  if(t.dataset.openi!=null){var ao=load();var ro=ao[+t.dataset.openi];if(ro&&ro.ps)window.open(ro.ps,'_blank');return;}
   if(t.dataset.del!=null){var a2=load();a2.splice(+t.dataset.del,1);store(a2);renderSaved();return;}
 });
 
@@ -167,5 +182,5 @@ $('dl').addEventListener('click',downloadCSV);
 $('clr').addEventListener('click',function(){if(load().length&&confirm('저장한 링크를 전부 삭제할까요?')){store([]);renderSaved();}});
 $('q').addEventListener('input',function(){renderProducts(this.value)});
 ['prod','src','med','kw'].forEach(function(i){$(i).addEventListener('input',gen);$(i).addEventListener('change',gen)});
-fillMedia();renderProducts('');renderSaved();
+fillMedia();renderProducts('');renderSaved();loadPixelshop();
 </script></body></html>
