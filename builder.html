@@ -33,6 +33,9 @@ select:focus,input:focus{outline:none;border-color:var(--accent);background:#fff
 .hint{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5}
 .primary .k{color:var(--accent)}.primary{border-color:#d4d4d4;background:#fff}
 .pxbadge{font-weight:700;font-size:11px;margin-left:2px;color:var(--sub)}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:13.5px;color:var(--sub);cursor:pointer;font-family:inherit}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 th{color:var(--sub);font-weight:700;font-size:11px}
@@ -45,6 +48,12 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 <h1>리훈 메타광고 링크빌더</h1>
 <p class="desc">제품·담당자 고르고 <b>소재번호</b>만 입력하면 픽셀샵 광고 URL이 즉석 생성됩니다.<br>새 광고 랜딩엔 <b>픽셀샵 URL</b>을 쓰세요(픽셀 전환추적 + 소재별 nt추적 동시).</p>
 
+<div class="tabs">
+  <button class="tab active" data-tab="build">＋ 링크 만들기</button>
+  <button class="tab" data-tab="saved">저장한 링크 <span id="tabcnt"></span></button>
+</div>
+
+<div id="tab-build">
 <div class="card">
   <label>제품</label>
   <input id="q" placeholder="제품 검색(예: 이야기, 오늘기억)" autocomplete="off">
@@ -70,8 +79,11 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
   <div class="save-row"><button class="btn solid" id="save">＋ 이 링크 저장</button></div>
   <div class="hint" id="savehint"></div>
 </div>
+</div><!-- /tab-build -->
 
+<div id="tab-saved" style="display:none">
 <div class="card">
+  <input id="qs" placeholder="저장한 링크 검색 (제품·소재·URL)" autocomplete="off" style="margin-bottom:14px">
   <h2>저장한 링크 <span id="cnt" style="color:var(--sub);font-weight:700"></span>
     <span class="thead-actions">
       <button class="btn mini" id="dl">엑셀 다운로드</button>
@@ -80,6 +92,7 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
   </h2>
   <div id="savedwrap"></div>
 </div>
+</div><!-- /tab-saved -->
 
 <p class="foot">데이터: 링크빌더 시트(제품·매체 DB) · 제품 추가 시 시트에 행 추가 후 재배포(deploy.py)<br>저장은 이 브라우저(localStorage)에 보관됩니다 · 리훈 메타광고 자동화</p>
 </div>
@@ -133,18 +146,28 @@ function store(a){localStorage.setItem(LSKEY,JSON.stringify(a))}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function renderSaved(){
-  var a=load();$('cnt').textContent=a.length?('('+a.length+')'):'';
+  var all=load();
+  if($('tabcnt'))$('tabcnt').textContent=all.length?('('+all.length+')'):'';
+  var qf=($('qs')?$('qs').value:'').trim().toLowerCase();
   var w=$('savedwrap');
-  if(!a.length){w.innerHTML='<div class="empty">아직 저장한 링크가 없어요. 위에서 만들고 <b>＋ 이 링크 저장</b>을 누르세요.</div>';return;}
-  var h='<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>픽셀샵</th><th>URL</th><th></th><th></th><th></th></tr></thead><tbody>';
-  a.forEach(function(r,i){
-    h+='<tr><td>'+esc(r.ts)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.kw)+'</td><td>'+pxLabel(r.slug)+
-       '</td><td class="u">'+esc(r.ps)+'</td>'+
-       '<td><button class="btn mini" data-copy="'+i+'">복사</button></td>'+
-       '<td><button class="btn mini" data-openi="'+i+'">열기</button></td>'+
-       '<td><button class="btn mini" data-del="'+i+'">삭제</button></td></tr>';
+  if(!all.length){$('cnt').textContent='';w.innerHTML='<div class="empty">아직 저장한 링크가 없어요. \'＋ 링크 만들기\' 탭에서 만들고 <b>＋ 이 링크 저장</b>을 누르세요.</div>';return;}
+  var body='',shown=0;
+  all.forEach(function(r,i){   // i = load() 원본 인덱스(복사/열기/삭제가 이 인덱스를 씀 → 필터해도 정확)
+    if(qf&&(''+r.name+' '+r.kw+' '+r.ps+' '+r.med).toLowerCase().indexOf(qf)<0)return;
+    shown++;
+    body+='<tr><td>'+esc(r.ts)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.kw)+'</td><td>'+pxLabel(r.slug)+
+      '</td><td class="u">'+esc(r.ps)+'</td>'+
+      '<td><button class="btn mini" data-copy="'+i+'">복사</button></td>'+
+      '<td><button class="btn mini" data-openi="'+i+'">열기</button></td>'+
+      '<td><button class="btn mini" data-del="'+i+'">삭제</button></td></tr>';
   });
-  h+='</tbody></table>';w.innerHTML=h;}
+  $('cnt').textContent='('+(qf?shown+'/'+all.length:all.length)+')';
+  w.innerHTML=shown?('<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>픽셀샵</th><th>URL</th><th></th><th></th><th></th></tr></thead><tbody>'+body+'</tbody></table>'):'<div class="empty">검색 결과가 없어요.</div>';}
+
+function switchTab(name){
+  ['build','saved'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){b.classList.toggle('active',b.dataset.tab===name)});
+  if(name==='saved')renderSaved();}
 
 function saveCur(){
   var p=curProd();if(!p||!p.slug)return;
@@ -170,6 +193,7 @@ function downloadCSV(){
 
 document.addEventListener('click',function(e){
   var t=e.target;
+  if(t.classList.contains('tab')){switchTab(t.dataset.tab);return;}
   if(t.classList.contains('btn')&&t.dataset.t){var v=$(t.dataset.t).textContent;if(v)navigator.clipboard.writeText(v).then(function(){t.textContent='복사됨';t.classList.add('done');setTimeout(function(){t.textContent='복사';t.classList.remove('done')},1100)});return;}
   if(t.dataset.copy!=null){var a=load();var r=a[+t.dataset.copy];if(r)navigator.clipboard.writeText(r.ps).then(function(){t.textContent='✓';setTimeout(function(){t.textContent='복사'},900)});return;}
   if(t.dataset.open){var u=$(t.dataset.open).textContent;if(u)window.open(u,'_blank');return;}
@@ -182,5 +206,6 @@ $('dl').addEventListener('click',downloadCSV);
 $('clr').addEventListener('click',function(){if(load().length&&confirm('저장한 링크를 전부 삭제할까요?')){store([]);renderSaved();}});
 $('q').addEventListener('input',function(){renderProducts(this.value)});
 ['prod','src','med','kw'].forEach(function(i){$(i).addEventListener('input',gen);$(i).addEventListener('change',gen)});
+if($('qs'))$('qs').addEventListener('input',renderSaved);
 fillMedia();renderProducts('');renderSaved();loadPixelshop();
 </script></body></html>
