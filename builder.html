@@ -9,11 +9,14 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'SUIT Variable','SUIT','Apple SD Gothic Neo',sans-serif;
   -webkit-font-smoothing:antialiased;padding:24px 14px 60px}
-.wrap{max-width:680px;margin:0 auto}
+.wrap{max-width:720px;margin:0 auto}
 h1{font-size:20px;font-weight:800;margin:4px 0 2px;letter-spacing:-.02em}
-.desc{color:var(--sub);font-size:13px;margin:0 0 20px;line-height:1.5}
+.desc{color:var(--sub);font-size:13px;margin:0 0 18px;line-height:1.5}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:13.5px;color:var(--sub);cursor:pointer;font-family:inherit}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
-.card h2{font-size:14px;font-weight:800;margin:0 0 12px;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:center}
+.card h2{font-size:14px;font-weight:800;margin:0 0 12px;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 label{display:block;font-size:12.5px;font-weight:700;color:var(--sub);margin:14px 0 6px;letter-spacing:-.01em}
 label:first-child{margin-top:0}
 select,input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--field);
@@ -21,32 +24,31 @@ select,input{width:100%;padding:12px 13px;border:1px solid var(--line);border-ra
 select:focus,input:focus{outline:none;border-color:var(--accent);background:#fff}
 .row{display:flex;gap:10px}.row>div{flex:1}
 .outbox{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px}
-.outbox .k{font-size:11.5px;font-weight:700;color:var(--sub);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.outbox .k{font-size:11.5px;font-weight:700;color:var(--sub);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .outbox .v{font-size:13px;word-break:break-all;line-height:1.5;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .btn{border:1px solid var(--line);background:#fff;color:var(--ink);font-size:12px;font-weight:700;
-  padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit}
+  padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn:active{background:#eee}.btn.done{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn.solid{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn.solid:active{opacity:.8}
-.save-row{display:flex;gap:8px;margin-top:4px}
-.save-row .btn{flex:1;padding:12px;font-size:14px}
+.save-row{display:flex;gap:8px;margin-top:4px}.save-row .btn{flex:1;padding:12px;font-size:14px}
 .hint{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5}
 .primary .k{color:var(--accent)}.primary{border-color:#d4d4d4;background:#fff}
 .pxbadge{font-weight:700;font-size:11px;margin-left:2px;color:var(--sub)}
-.tabs{display:flex;gap:6px;margin-bottom:16px}
-.tab{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:700;font-size:13.5px;color:var(--sub);cursor:pointer;font-family:inherit}
-.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 th{color:var(--sub);font-weight:700;font-size:11px}
 td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;color:var(--sub)}
-.thead-actions{display:flex;gap:6px}
-.empty{color:var(--sub);font-size:13px;text-align:center;padding:18px 0}
 .mini{font-size:11px;padding:3px 8px}
+.empty{color:var(--sub);font-size:13px;text-align:center;padding:18px 0}
+.filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.filters>*{flex:1;min-width:120px}
+details.add{border:1px dashed var(--line);border-radius:12px;padding:0 14px;margin-top:6px}
+details.add summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--accent);padding:12px 0;list-style:none}
+details.add summary::-webkit-details-marker{display:none}
+.clist{font-size:12px;margin-top:8px}.clist .ci{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
 .foot{color:var(--sub);font-size:11.5px;text-align:center;margin-top:22px;line-height:1.6}
 </style></head><body><div class="wrap">
 <h1>리훈 메타광고 링크빌더</h1>
-<p class="desc">제품·담당자 고르고 <b>소재번호</b>만 입력하면 픽셀샵 광고 URL이 즉석 생성됩니다.<br>새 광고 랜딩엔 <b>픽셀샵 URL</b>을 쓰세요(픽셀 전환추적 + 소재별 nt추적 동시).</p>
+<p class="desc">제품·담당자 고르고 <b>소재번호</b>만 입력하면 픽셀샵 광고 URL이 즉석 생성됩니다.</p>
 
 <div class="tabs">
   <button class="tab active" data-tab="build">＋ 링크 만들기</button>
@@ -59,6 +61,19 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
   <input id="q" placeholder="제품 검색(예: 이야기, 오늘기억)" autocomplete="off">
   <select id="prod" style="margin-top:8px"></select>
   <div id="plink" class="hint"></div>
+
+  <details class="add">
+    <summary>＋ 새 제품 직접 추가 (웹앱에만 저장·바로 사용)</summary>
+    <label>제품명</label><input id="c_name" placeholder="예: 2027 이야기 다이어리" autocomplete="off">
+    <div class="row">
+      <div><label>슬러그(nt_detail·영문)</label><input id="c_slug" placeholder="예: story_diary_27" autocomplete="off"></div>
+    </div>
+    <label>마케팅링크(네이버)</label><input id="c_link" placeholder="https://mkt.shopping.naver.com/link/..." autocomplete="off">
+    <div class="save-row"><button class="btn solid" id="c_add">추가</button></div>
+    <div class="hint" id="c_hint">웹앱추가 제품은 이 브라우저에만 저장돼요. 모두 공유·정식등록은 시트에 넣고 deploy.py.</div>
+    <div class="clist" id="c_list"></div>
+  </details>
+
   <div class="row" style="margin-top:4px">
     <div><label>매체(nt_source)</label><select id="src"></select></div>
     <div><label>담당자(nt_medium)</label><select id="med"></select></div>
@@ -73,19 +88,22 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
     <div class="v" id="ps"></div>
   </div>
   <div class="outbox">
-    <div class="k">원본 파라미터 URL (마케팅링크 직행) <button class="btn" data-t="raw">복사</button></div>
+    <div class="k"><span>원본 파라미터 URL (마케팅링크 직행)</span><button class="btn" data-t="raw">복사</button></div>
     <div class="v" id="raw"></div>
   </div>
   <div class="save-row"><button class="btn solid" id="save">＋ 이 링크 저장</button></div>
-  <div class="hint" id="savehint"></div>
 </div>
 </div><!-- /tab-build -->
 
 <div id="tab-saved" style="display:none">
 <div class="card">
-  <input id="qs" placeholder="저장한 링크 검색 (제품·소재·URL)" autocomplete="off" style="margin-bottom:14px">
+  <div class="filters">
+    <input id="qs" placeholder="검색(제품·소재·URL)" autocomplete="off">
+    <select id="fmed"></select>
+    <select id="fprod"></select>
+  </div>
   <h2>저장한 링크 <span id="cnt" style="color:var(--sub);font-weight:700"></span>
-    <span class="thead-actions">
+    <span style="display:flex;gap:6px">
       <button class="btn mini" id="dl">엑셀 다운로드</button>
       <button class="btn mini" id="clr">전체삭제</button>
     </span>
@@ -94,24 +112,39 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 </div>
 </div><!-- /tab-saved -->
 
-<p class="foot">데이터: 링크빌더 시트(제품·매체 DB) · 제품 추가 시 시트에 행 추가 후 재배포(deploy.py)<br>저장은 이 브라우저(localStorage)에 보관됩니다 · 리훈 메타광고 자동화</p>
+<p class="foot">데이터: 링크빌더 시트(제품·매체 DB) · 정식 제품추가는 시트+deploy.py<br>저장·웹앱추가제품은 이 브라우저(localStorage)에 보관 · 리훈 메타광고 자동화</p>
 </div>
 <script>
 var PIXELSHOP="https://rihoon.github.io/rihoon-pixelshop/";
 var PRODUCTS=[{"slug": "wantsay_note_inkfine", "name": "하고싶은말 노트 A6 잉크파인", "cat": "하고싶은말", "link": "https://mkt.shopping.naver.com/link/698c109349d64377571c5a7f", "usable": true}, {"slug": "wantsay_studyplanner", "name": "하고싶은말 스터디플래너", "cat": "하고싶은말", "link": "https://mkt.shopping.naver.com/link/6821470e46ee00714bd17bd0", "usable": true}, {"slug": "wantsay_diary_26", "name": "2026 하고싶은말 다이어리 모음", "cat": "하고싶은말", "link": "https://mkt.shopping.naver.com/link/68b7b40fb445db57f8a664b9", "usable": true}, {"slug": "wantsay_diary_27", "name": "2027 하고싶은말 다이어리 모음", "cat": "하고싶은말", "link": "", "usable": false}, {"slug": "story_note_inkfine", "name": "이야기 노트 잉크파인", "cat": "이야기", "link": "https://mkt.shopping.naver.com/link/6821470cb84505306af88cc2", "usable": true}, {"slug": "story_mini_keyring", "name": "이야기 미니키링", "cat": "이야기", "link": "https://mkt.shopping.naver.com/link/69716d53b3883165810e6d0a", "usable": true}, {"slug": "story_pencase", "name": "이야기 펜케이스", "cat": "이야기", "link": "https://mkt.shopping.naver.com/link/6821470efd7d167e0feacf0d", "usable": true}, {"slug": "story_diary_26", "name": "2026 이야기 다이어리 모음", "cat": "이야기", "link": "https://mkt.shopping.naver.com/link/690b184c7a7b4215ae26d237", "usable": true}, {"slug": "story_diary_27", "name": "2027 이야기 다이어리 모음", "cat": "이야기", "link": "", "usable": false}, {"slug": "story_diary_2nd", "name": "이야기 하반기 다이어리", "cat": "이야기", "link": "https://mkt.shopping.naver.com/link/6821470fb84505306af88ce4", "usable": true}, {"slug": "gombu_checklist_A4", "name": "곰부 체크리스트", "cat": "곰부", "link": "https://mkt.shopping.naver.com/link/6821470efd7d167e0feacf13", "usable": true}, {"slug": "gombu_checklist_stand", "name": "곰부 세우는 체크리스트", "cat": "곰부", "link": "https://mkt.shopping.naver.com/link/6821470dfd7d167e0feacf07", "usable": true}, {"slug": "gombu_checklist_small", "name": "곰부 체크리스트 스몰", "cat": "곰부", "link": "https://mkt.shopping.naver.com/link/6821470eb84505306af88ccf", "usable": true}, {"slug": "gombu_study", "name": "곰부 스터디플래너", "cat": "곰부", "link": "https://mkt.shopping.naver.com/link/6821470fb84505306af88ce8", "usable": true}, {"slug": "gombu_praisesticker", "name": "곰부 칭찬스티커판", "cat": "곰부", "link": "https://mkt.shopping.naver.com/link/6821470d46ee00714bd17bcd", "usable": true}, {"slug": "gombu_checklist_27", "name": "2027 곰부 체크리스트 모음", "cat": "곰부", "link": "", "usable": false}, {"slug": "office_diary_daily", "name": "회사생활 데일리", "cat": "회사생활", "link": "https://mkt.shopping.naver.com/link/6821470cab37d362524356f9", "usable": true}, {"slug": "office_diary_weekly", "name": "회사생활 위클리", "cat": "회사생활", "link": "", "usable": false}, {"slug": "office_diary_26", "name": "2026 회사생활 모음", "cat": "회사생활", "link": "https://mkt.shopping.naver.com/link/69002824eb7d5c251661df34", "usable": true}, {"slug": "office_diary_27", "name": "2027 회사생활 모음", "cat": "회사생활", "link": "", "usable": false}, {"slug": "todaymemory_5year", "name": "오늘기억 5년3년", "cat": "오늘기억", "link": "https://mkt.shopping.naver.com/link/6821470d814c2c37cf000f72", "usable": true}, {"slug": "todaymemory_5year_sale", "name": "오늘기억 5년3년 할인", "cat": "오늘기억", "link": "https://mkt.shopping.naver.com/link/6a0d53c3bd73e246cdbc5de8", "usable": true}, {"slug": "todaymemory_mood", "name": "오늘기억 감정일기", "cat": "오늘기억", "link": "https://mkt.shopping.naver.com/link/6821470d46ee00714bd17bc7", "usable": true}, {"slug": "todaymemory_26", "name": "2026 오늘기억 10년", "cat": "오늘기억", "link": "https://mkt.shopping.naver.com/link/691ae2064500bd61a3071e1a", "usable": true}, {"slug": "todaymemory_27", "name": "2027 오늘기억 모음", "cat": "오늘기억", "link": "", "usable": false}, {"slug": "today_cashbook_1y_re", "name": "오늘쓰임 1년 리뉴얼", "cat": "오늘쓰임", "link": "https://mkt.shopping.naver.com/link/6821470dfd7d167e0feacf06", "usable": true}, {"slug": "today_cashbook_1y", "name": "오늘쓰임 1년 오리지널", "cat": "오늘쓰임", "link": "https://mkt.shopping.naver.com/link/68214711ab37d3625243572d", "usable": true}, {"slug": "today_cashbook_6m", "name": "오늘쓰임 6개월", "cat": "오늘쓰임", "link": "https://mkt.shopping.naver.com/link/68214711efd7a65d55478597", "usable": true}, {"slug": "today_cashbook_easy", "name": "쉬운 오늘쓰임", "cat": "오늘쓰임", "link": "https://mkt.shopping.naver.com/link/69d83dc3e88fe609866ef8cc", "usable": true}, {"slug": "today_cashbook_category", "name": "카테고리 오늘쓰임", "cat": "오늘쓰임", "link": "https://mkt.shopping.naver.com/link/6821470cfd7d167e0feacef6", "usable": true}, {"slug": "today_cashbook_category_mini", "name": "카테고리 오늘쓰임 미니", "cat": "오늘쓰임", "link": "", "usable": false}, {"slug": "today_cashbook_easy_27", "name": "2027 쉬운 오늘쓰임", "cat": "오늘쓰임", "link": "", "usable": false}, {"slug": "today_cashbook_category_27", "name": "2027 카테고리 오늘쓰임", "cat": "오늘쓰임", "link": "", "usable": false}, {"slug": "today_cashbook_1y_27", "name": "2027 오늘쓰임 1년", "cat": "오늘쓰임", "link": "", "usable": false}, {"slug": "campus_weekly", "name": "대학생활 위클리", "cat": "대학생활", "link": "https://mkt.shopping.naver.com/link/6821470dab37d362524356ff", "usable": true}, {"slug": "campus_daily", "name": "대학생활 데일리(양장제본)", "cat": "대학생활", "link": "https://mkt.shopping.naver.com/link/6821471046ee00714bd17be1", "usable": true}, {"slug": "campus_26", "name": "2026 대학생활 날짜형", "cat": "대학생활", "link": "https://mkt.shopping.naver.com/link/6821470dfd7d167e0feacf02", "usable": true}, {"slug": "goaltracker_accordion", "name": "아코디언 작심일년", "cat": "작심일년", "link": "https://mkt.shopping.naver.com/link/69b2079e11036343e65c61b0", "usable": true}, {"slug": "goaltracker_1y", "name": "작심일년", "cat": "작심일년", "link": "https://mkt.shopping.naver.com/link/6821470dfd7d167e0feacf01", "usable": true}, {"slug": "goaltracker_1y_26", "name": "2026 작심일년", "cat": "작심일년", "link": "https://mkt.shopping.naver.com/link/68bf963c6d938f4626a05b91", "usable": true}, {"slug": "goaltracker_1y_27", "name": "2027 작심일년", "cat": "작심일년", "link": "", "usable": false}, {"slug": "calendar_sticker_26", "name": "2026 달력스티커 모음", "cat": "시즌에만판매", "link": "https://mkt.shopping.naver.com/link/68bf963c17ba7b2eec714aa2", "usable": true}, {"slug": "calendar_sticker_27", "name": "2027 달력스티커 모음", "cat": "시즌에만판매", "link": "", "usable": false}, {"slug": "ilike_diary_27", "name": "2027 아이라이크 다이어리", "cat": "시즌에만판매", "link": "", "usable": false}, {"slug": "clearwave_calendar_27", "name": "2027 클리어웨이브", "cat": "시즌에만판매", "link": "", "usable": false}, {"slug": "monitor_calendar_27", "name": "2027 언더모니터", "cat": "시즌에만판매", "link": "", "usable": false}, {"slug": "retro_calendar_wall_27", "name": "2027 레트로 벽달력 모음", "cat": "시즌에만판매", "link": "", "usable": false}, {"slug": "retro_calendar_desk_27", "name": "2027 레트로 탁상달력 모음", "cat": "시즌에만판매", "link": "", "usable": false}, {"slug": "walkingsmile_elem", "name": "초등 워킹스마일", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/6821470e815d2663a462fc3e", "usable": true}, {"slug": "childlike_elem", "name": "초등 차일드라이크", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/6821470efd7d167e0feacf12", "usable": true}, {"slug": "summer_elem", "name": "초등 반가워 여름방학", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/6821470d814c2c37cf000f7e", "usable": true}, {"slug": "winter_elem", "name": "초등 반가워 겨울방학", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/6821470defd7a65d5547857c", "usable": true}, {"slug": "bookdive_elem", "name": "초등 책쏙 초등 독서기록장", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/695e13677c27246bfcb3509b", "usable": true}, {"slug": "gombu_stand_elem", "name": "초등 곰부 세우는플래너", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/6821470d62fffc0a4a4a54d6", "usable": true}, {"slug": "today_cashbook_category_elem", "name": "초등 카테고리 오늘쓰임", "cat": "초등", "link": "https://mkt.shopping.naver.com/link/69bcf4b1f5f5b45f0ce033fe", "usable": true}, {"slug": "someday_bookrecord", "name": "어떤날의문장 독서기록장", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6821470e62fffc0a4a4a54e2", "usable": true}, {"slug": "someday_bookrecord_re", "name": "어떤날의 문장 독서기록장 리뉴얼", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/69e6de97b7de6a5bec6a0b3d", "usable": true}, {"slug": "doit_planner", "name": "제대로 종합장", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/68214710815d2663a462fc5b", "usable": true}, {"slug": "doit_study", "name": "제대로 학습장", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/682147102f0ac5782176efcf", "usable": true}, {"slug": "baby_diary", "name": "서툴지만잘부탁해 수유일지", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6821470f815d2663a462fc50", "usable": true}, {"slug": "pregnant_diary", "name": "서툴지만잘부탁해 임신3종세트", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6821470d815d2663a462fc3a", "usable": true}, {"slug": "openview_monthly", "name": "오픈뷰 먼슬리", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6822de5a2f0ac5782177002d", "usable": true}, {"slug": "openview_weekly", "name": "오픈뷰 위클리", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6822de5a46ee00714bd18b86", "usable": true}, {"slug": "hiddenline_exercise", "name": "숨은라인찾기운동일지", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/68214711ab37d36252435735", "usable": true}, {"slug": "teacherdiary", "name": "가르치며배우며 교무수첩", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6821470d815d2663a462fc35", "usable": true}, {"slug": "fountainpen_note", "name": "가감한 만년필 노트", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6966e8d81ce9f20dac2b91a4", "usable": true}, {"slug": "today_study_1y", "name": "오늘공부 스터디플래너 1년", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/6821471146ee00714bd17bf1", "usable": true}, {"slug": "dotodo_diary", "name": "두투두 다이어리", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/682d1fb8815d2663a4636445", "usable": true}, {"slug": "taltal_diary", "name": "마음탈탈 감사일기 빡침일기", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/688882fc27d87c496537c506", "usable": true}, {"slug": "tts_3m", "name": "뜨루더시즌 3개월다이어리", "cat": "만년제품", "link": "https://mkt.shopping.naver.com/link/68a3caac7e34a52f79bde870", "usable": true}, {"slug": "all_sticker", "name": "리무버블스티커 모음", "cat": "스티커", "link": "", "usable": false}, {"slug": "round_sticker", "name": "원형 리무버블스티커", "cat": "스티커", "link": "", "usable": false}, {"slug": "office_sticker", "name": "알지알지 회사생활 스티커", "cat": "스티커", "link": "", "usable": false}, {"slug": "question_basic_sticker", "name": "알지알지 질문 스티커", "cat": "스티커", "link": "", "usable": false}, {"slug": "question_change_sticker", "name": "알지알지 교환질문 스티커", "cat": "스티커", "link": "", "usable": false}, {"slug": "question_draw_sticker", "name": "알지알지 하찮은질문 스티커", "cat": "스티커", "link": "", "usable": false}, {"slug": "tonedown_highlighter", "name": "톤다운캄다운 하이라이터", "cat": "필기구및기타", "link": "https://mkt.shopping.naver.com/link/689a867ba39756110ef603bd", "usable": true}, {"slug": "pdf_all_sticker", "name": "PNG 스티커 모음", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_all_diary", "name": "PDF 다이어리 모음", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_today_cashbook", "name": "PDF 오늘쓰임 가계부", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_story_diary", "name": "PDF 이야기 다이어리", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_today_cashbook_re", "name": "PDF 리뉴얼 오늘쓰임", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_baby_diary", "name": "PDF 서툴지만잘부탁해 수유일지", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_teacher_diary", "name": "PDF 가르치며 배우며 교무수첩", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_Baseball_diary", "name": "PDF 덕아웃 야구다이어리", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_wantsay_diary", "name": "PDF 하고싶은말 다이어리", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_gombu_study", "name": "PDF 곰부 스터디플래너", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_gombu_checklist", "name": "PDF 곰부 체크리스트", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_office_diary", "name": "PDF 회사생활", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_office_diary_weekly", "name": "PDF 회사생활 위클리", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_office_diary_daily", "name": "PDF 회사생활 데일리", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_todaymemory", "name": "PDF 오늘기억", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_campus_diary", "name": "PDF 대학생활", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_campus_diary_weekly", "name": "PDF 대학생활 위클리", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_hiddenline_exercise", "name": "PDF 숨은라인찾기 운동일지", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_hamingdiet", "name": "PDF 하밍 다이어트", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "pdf_someday_bookrecord", "name": "PDF 어떤날의문장 독서기록장", "cat": "pdf다이어리", "link": "", "usable": false}, {"slug": "carousel_26", "name": "2026 시즌제품 캐러셀", "cat": "캐러셀및이벤트광고", "link": "", "usable": false}, {"slug": "carousel_27", "name": "2027 시즌제품 캐러셀", "cat": "캐러셀및이벤트광고", "link": "", "usable": false}, {"slug": "branddday_26", "name": "2026 브랜드데이", "cat": "캐러셀및이벤트광고", "link": "", "usable": false}, {"slug": "branddday_27", "name": "2027 브랜드데이", "cat": "캐러셀및이벤트광고", "link": "", "usable": false}];
 var MEDIA=[{"code": "traffic", "label": "기본"}, {"code": "traffic_b", "label": "다빈"}, {"code": "traffic_s", "label": "수진"}, {"code": "traffic_m", "label": "민지"}, {"code": "traffic_e", "label": "은지"}, {"code": "traffic_r", "label": "릴스"}, {"code": "traffic_t", "label": "테스트"}, {"code": "traffic_h", "label": "이훈"}, {"code": "traffic_c", "label": "재도전"}];
 var SOURCES=[{"code": "facebook", "label": "페이스북"}, {"code": "facebook_co", "label": "페이스북(자사몰)"}];
-var LSKEY='rihoon_linkbuilder_saved';
+var LSKEY='rihoon_linkbuilder_saved', CKEY='rihoon_lb_custom', MEKEY='rihoon_lb_medfilter';
 var $=function(i){return document.getElementById(i)};
-var PXKEYS=null;  // 픽셀샵 index.html 제품맵 키(등록여부 확인용)
+var PXKEYS=null;
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function load(){try{return JSON.parse(localStorage.getItem(LSKEY)||'[]')}catch(e){return[]}}
+function store(a){localStorage.setItem(LSKEY,JSON.stringify(a))}
+function loadCustom(){try{return JSON.parse(localStorage.getItem(CKEY)||'[]')}catch(e){return[]}}
+function storeCustom(a){localStorage.setItem(CKEY,JSON.stringify(a))}
+function allProducts(){return PRODUCTS.concat(loadCustom().map(function(c){return {slug:c.slug,name:c.name,cat:'＋ 내가 추가',link:c.link,usable:true,custom:true}}))}
+function okNaver(u){try{var h=new URL(u).hostname;return h==='naver.com'||h.slice(-10)==='.naver.com'}catch(e){return false}}
+
 function loadPixelshop(){
   fetch('index.html',{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){
     var m=t.match(/var MAP=(\{[\s\S]*?\});/);PXKEYS={};
     if(m){try{var o=JSON.parse(m[1]);Object.keys(o).forEach(function(k){PXKEYS[k]=1})}catch(e){}}
     gen();renderSaved();
   }).catch(function(){PXKEYS=null});}
-function pxLabel(slug){if(PXKEYS===null)return '<span class="pxbadge">…</span>';
-  return PXKEYS[slug]?'<span class="pxbadge">✅ 등록</span>':'<span class="pxbadge">⚠️ 미등록</span>';}
+
+function pxState(slug,custom){ // 'reg' | 'custom' | 'no' | 'wait'
+  if(PXKEYS===null)return 'wait';
+  if(PXKEYS[slug])return 'reg';
+  if(custom)return 'custom';
+  return 'no';}
+function pxLabel(slug,custom){var s=pxState(slug,custom);
+  return s==='reg'?'<span class="pxbadge">✅ 등록</span>':s==='custom'?'<span class="pxbadge">🆕 내추가</span>':s==='no'?'<span class="pxbadge">⚠️ 미등록</span>':'<span class="pxbadge">…</span>';}
 
 function fillMedia(){
   SOURCES.forEach(function(s){var o=document.createElement('option');o.value=s.code;o.textContent=s.label+' ('+s.code+')';$('src').appendChild(o)});
@@ -119,93 +152,124 @@ function fillMedia(){
   var h=MEDIA.filter(function(m){return m.code==='traffic_h'});if(h.length)$('med').value='traffic_h';}
 
 function renderProducts(filter){
-  var sel=$('prod');sel.innerHTML='';var f=(filter||'').trim().toLowerCase();
-  var byCat={};PRODUCTS.forEach(function(p){if(f&&p.name.toLowerCase().indexOf(f)<0&&p.slug.toLowerCase().indexOf(f)<0&&p.cat.toLowerCase().indexOf(f)<0)return;(byCat[p.cat]=byCat[p.cat]||[]).push(p)});
-  Object.keys(byCat).forEach(function(cat){var g=document.createElement('optgroup');g.label=cat;
-    byCat[cat].forEach(function(p){var o=document.createElement('option');o.value=p.slug;o.textContent=p.name+(p.usable?'':' (링크없음)');o.disabled=!p.usable;o.dataset.link=p.link;o.dataset.name=p.name;g.appendChild(o)});
+  var sel=$('prod');sel.innerHTML='';var f=(filter||'').trim().toLowerCase();var list=allProducts();
+  var byCat={},order=[];list.forEach(function(p){if(f&&p.name.toLowerCase().indexOf(f)<0&&p.slug.toLowerCase().indexOf(f)<0&&p.cat.toLowerCase().indexOf(f)<0)return;if(!byCat[p.cat]){byCat[p.cat]=[];order.push(p.cat)}byCat[p.cat].push(p)});
+  order.forEach(function(cat){var g=document.createElement('optgroup');g.label=cat;
+    byCat[cat].forEach(function(p){var o=document.createElement('option');o.value=p.slug;o.textContent=p.name+(p.usable?'':' (링크없음)');o.disabled=!p.usable;o.dataset.link=p.link;o.dataset.name=p.name;o.dataset.custom=p.custom?'1':'';g.appendChild(o)});
     sel.appendChild(g)});
   for(var i=0;i<sel.options.length;i++){if(!sel.options[i].disabled){sel.selectedIndex=i;break;}}
   gen();}
 
-function curProd(){var o=$('prod').options[$('prod').selectedIndex];return o?{slug:o.value,link:o.dataset.link||'',name:o.dataset.name||o.textContent}:null;}
+function curProd(){var o=$('prod').options[$('prod').selectedIndex];return o?{slug:o.value,link:o.dataset.link||'',name:o.dataset.name||o.textContent,custom:o.dataset.custom==='1'}:null;}
 function mkqs(slug,src,med,kw){return 'nt_source='+encodeURIComponent(src)+'&nt_medium='+encodeURIComponent(med)+'&nt_detail='+encodeURIComponent(slug)+(kw?'&nt_keyword='+encodeURIComponent(kw):'');}
+function psURL(p,src,med,kw){var u=PIXELSHOP+'?'+mkqs(p.slug,src,med,kw);
+  if(p.custom&&p.link)u+='&d='+encodeURIComponent(p.link)+'&pn='+encodeURIComponent(p.name);return u;}
 
 function gen(){
-  var p=curProd();var kw=$('kw').value.trim();var src=$('src').value;var med=$('med').value;
-  var b=$('pxbadge');
+  var p=curProd();var kw=$('kw').value.trim();var src=$('src').value;var med=$('med').value;var b=$('pxbadge');
   $('plink').textContent=p&&p.link?('마케팅링크: '+p.link):'⚠️ 이 제품은 마케팅링크가 없어요(출시예정/품절)';
   if(!p||!p.slug){$('ps').textContent='';$('raw').textContent='';if(b)b.textContent='';return;}
+  $('ps').textContent=psURL(p,src,med,kw);
   var qs=mkqs(p.slug,src,med,kw);
-  $('ps').textContent=PIXELSHOP+'?'+qs;
   $('raw').textContent=p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'(마케팅링크 없음)';
-  if(b)b.innerHTML=(PXKEYS===null)?'':(PXKEYS[p.slug]?'✅ 픽셀샵 등록됨':'⚠️ 픽셀샵 미등록·deploy 필요');}
+  if(b){var s=pxState(p.slug,p.custom);
+    b.textContent=s==='reg'?'✅ 픽셀샵 등록됨':s==='custom'?'🆕 내 추가·링크에 목적지 포함(작동)':s==='no'?'⚠️ 픽셀샵 미등록·deploy 필요':'';}}
 
-// ── 저장(localStorage) ──
-function load(){try{return JSON.parse(localStorage.getItem(LSKEY)||'[]')}catch(e){return[]}}
-function store(a){localStorage.setItem(LSKEY,JSON.stringify(a))}
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+// ── 새 제품 추가 ──
+function renderCustomList(){
+  var c=loadCustom();var w=$('c_list');
+  if(!c.length){w.innerHTML='';return;}
+  w.innerHTML=c.map(function(x,i){return '<div class="ci"><span>'+esc(x.name)+' <span style="color:var(--sub)">('+esc(x.slug)+')</span></span><button class="btn mini" data-cdel="'+i+'">삭제</button></div>'}).join('');}
+function addCustom(){
+  var name=$('c_name').value.trim(),slug=$('c_slug').value.trim().toLowerCase(),link=$('c_link').value.trim();
+  if(!name){alert('제품명을 입력하세요.');return;}
+  if(!/^[a-z0-9_]+$/.test(slug)){alert('슬러그는 영문소문자·숫자·_ 만 가능해요 (예: story_diary_27).');return;}
+  if(!okNaver(link)){alert('마케팅링크는 네이버(naver.com) 주소여야 해요.');return;}
+  var c=loadCustom();
+  if(c.some(function(x){return x.slug===slug})||PRODUCTS.some(function(x){return x.slug===slug})){alert('이미 있는 슬러그예요.');return;}
+  c.unshift({name:name,slug:slug,link:link});storeCustom(c);
+  $('c_name').value='';$('c_slug').value='';$('c_link').value='';
+  renderCustomList();renderProducts($('q').value);
+  // 방금 추가한 제품 선택
+  var sel=$('prod');for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===slug){sel.selectedIndex=i;break;}}gen();
+  $('c_hint').textContent='✓ 추가됨 — 아래 제품 목록 \'＋ 내가 추가\'에서 선택해 바로 쓰세요.';}
+
+// ── 저장 ──
+function saveCur(){
+  var p=curProd();if(!p||!p.slug)return;
+  var kw=$('kw').value.trim();var src=$('src').value;var med=$('med').value;var qs=mkqs(p.slug,src,med,kw);
+  var now=new Date();var ts=(now.getMonth()+1)+'/'+now.getDate()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+  var a=load();
+  a.unshift({ts:ts,name:p.name,slug:p.slug,src:src,med:med,kw:kw,custom:!!p.custom,
+             ps:psURL(p,src,med,kw), raw:(p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'')});
+  store(a);renderSaved();
+  var b=$('save');var t=b.textContent;b.textContent='저장됨 ✓';b.classList.add('done');setTimeout(function(){b.textContent=t;b.classList.remove('done')},1100);}
+
+// ── 저장목록(필터: 검색+담당자+제품) ──
+function medLabel(code){var m=MEDIA.filter(function(x){return x.code===code})[0];return m?m.label:code;}
+function fillSavedFilters(all){
+  var fm=$('fmed'),fp=$('fprod');var cm=fm.value,cp=fp.value;
+  var meds={},prods={};all.forEach(function(r){if(r.med)meds[r.med]=1;if(r.name)prods[r.name]=1;});
+  fm.innerHTML='<option value="">담당자 전체</option>'+Object.keys(meds).map(function(c){return '<option value="'+esc(c)+'">'+esc(medLabel(c))+'</option>'}).join('');
+  fp.innerHTML='<option value="">제품 전체</option>'+Object.keys(prods).sort().map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>'}).join('');
+  fm.value=cm||localStorage.getItem(MEKEY)||'';fp.value=cp||'';}
 
 function renderSaved(){
   var all=load();
   if($('tabcnt'))$('tabcnt').textContent=all.length?('('+all.length+')'):'';
+  fillSavedFilters(all);
   var qf=($('qs')?$('qs').value:'').trim().toLowerCase();
+  var fm=$('fmed')?$('fmed').value:'';var fp=$('fprod')?$('fprod').value:'';
   var w=$('savedwrap');
   if(!all.length){$('cnt').textContent='';w.innerHTML='<div class="empty">아직 저장한 링크가 없어요. \'＋ 링크 만들기\' 탭에서 만들고 <b>＋ 이 링크 저장</b>을 누르세요.</div>';return;}
   var body='',shown=0;
-  all.forEach(function(r,i){   // i = load() 원본 인덱스(복사/열기/삭제가 이 인덱스를 씀 → 필터해도 정확)
+  all.forEach(function(r,i){   // i = 원본 인덱스(복사/열기/삭제가 이 인덱스 사용 → 필터해도 정확)
+    if(fm&&r.med!==fm)return;
+    if(fp&&r.name!==fp)return;
     if(qf&&(''+r.name+' '+r.kw+' '+r.ps+' '+r.med).toLowerCase().indexOf(qf)<0)return;
     shown++;
-    body+='<tr><td>'+esc(r.ts)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.kw)+'</td><td>'+pxLabel(r.slug)+
+    body+='<tr><td>'+esc(r.ts)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.kw)+'</td><td>'+esc(medLabel(r.med))+'</td><td>'+pxLabel(r.slug,r.custom)+
       '</td><td class="u">'+esc(r.ps)+'</td>'+
       '<td><button class="btn mini" data-copy="'+i+'">복사</button></td>'+
       '<td><button class="btn mini" data-openi="'+i+'">열기</button></td>'+
       '<td><button class="btn mini" data-del="'+i+'">삭제</button></td></tr>';
   });
-  $('cnt').textContent='('+(qf?shown+'/'+all.length:all.length)+')';
-  w.innerHTML=shown?('<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>픽셀샵</th><th>URL</th><th></th><th></th><th></th></tr></thead><tbody>'+body+'</tbody></table>'):'<div class="empty">검색 결과가 없어요.</div>';}
+  $('cnt').textContent='('+((qf||fm||fp)?shown+'/'+all.length:all.length)+')';
+  w.innerHTML=shown?('<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>담당자</th><th>픽셀샵</th><th>URL</th><th></th><th></th><th></th></tr></thead><tbody>'+body+'</tbody></table>'):'<div class="empty">조건에 맞는 링크가 없어요.</div>';}
+
+function downloadCSV(){
+  var a=load();if(!a.length){alert('저장한 링크가 없어요.');return;}
+  var head=['저장시각','제품','슬러그','nt_source','nt_medium','담당자','소재번호','픽셀샵URL','원본URL'];
+  var rows=[head].concat(a.map(function(r){return [r.ts,r.name,r.slug,r.src,r.med,medLabel(r.med),r.kw,r.ps,r.raw]}));
+  var csv=rows.map(function(row){return row.map(function(c){return '"'+String(c==null?'':c).replace(/"/g,'""')+'"'}).join(',')}).join('\r\n');
+  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  var d=new Date();var fn='링크빌더_저장링크_'+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)+'.csv';
+  var url=URL.createObjectURL(blob);var el=document.createElement('a');el.href=url;el.download=fn;el.click();setTimeout(function(){URL.revokeObjectURL(url)},1000);}
 
 function switchTab(name){
   ['build','saved'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
   Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){b.classList.toggle('active',b.dataset.tab===name)});
   if(name==='saved')renderSaved();}
 
-function saveCur(){
-  var p=curProd();if(!p||!p.slug)return;
-  var kw=$('kw').value.trim();var src=$('src').value;var med=$('med').value;
-  var qs=mkqs(p.slug,src,med,kw);
-  var now=new Date();var ts=(now.getMonth()+1)+'/'+now.getDate()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
-  var a=load();
-  a.unshift({ts:ts,name:p.name,slug:p.slug,src:src,med:med,kw:kw,
-             ps:PIXELSHOP+'?'+qs, raw:(p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'')});
-  store(a);renderSaved();
-  var b=$('save');var t=b.textContent;b.textContent='저장됨 ✓';b.classList.add('done');
-  setTimeout(function(){b.textContent=t;b.classList.remove('done')},1100);}
-
-function downloadCSV(){
-  var a=load();if(!a.length){alert('저장한 링크가 없어요.');return;}
-  var head=['저장시각','제품','슬러그','nt_source','nt_medium','소재번호','픽셀샵URL','원본URL'];
-  var rows=[head].concat(a.map(function(r){return [r.ts,r.name,r.slug,r.src,r.med,r.kw,r.ps,r.raw]}));
-  var csv=rows.map(function(row){return row.map(function(c){return '"'+String(c==null?'':c).replace(/"/g,'""')+'"'}).join(',')}).join('\r\n');
-  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  var d=new Date();var fn='링크빌더_저장링크_'+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)+'.csv';
-  var url=URL.createObjectURL(blob);var el=document.createElement('a');el.href=url;el.download=fn;el.click();
-  setTimeout(function(){URL.revokeObjectURL(url)},1000);}
-
 document.addEventListener('click',function(e){
   var t=e.target;
   if(t.classList.contains('tab')){switchTab(t.dataset.tab);return;}
   if(t.classList.contains('btn')&&t.dataset.t){var v=$(t.dataset.t).textContent;if(v)navigator.clipboard.writeText(v).then(function(){t.textContent='복사됨';t.classList.add('done');setTimeout(function(){t.textContent='복사';t.classList.remove('done')},1100)});return;}
-  if(t.dataset.copy!=null){var a=load();var r=a[+t.dataset.copy];if(r)navigator.clipboard.writeText(r.ps).then(function(){t.textContent='✓';setTimeout(function(){t.textContent='복사'},900)});return;}
   if(t.dataset.open){var u=$(t.dataset.open).textContent;if(u)window.open(u,'_blank');return;}
+  if(t.dataset.copy!=null){var a=load();var r=a[+t.dataset.copy];if(r)navigator.clipboard.writeText(r.ps).then(function(){t.textContent='✓';setTimeout(function(){t.textContent='복사'},900)});return;}
   if(t.dataset.openi!=null){var ao=load();var ro=ao[+t.dataset.openi];if(ro&&ro.ps)window.open(ro.ps,'_blank');return;}
-  if(t.dataset.del!=null){var a2=load();a2.splice(+t.dataset.del,1);store(a2);renderSaved();return;}
+  if(t.dataset.del!=null){if(!confirm('이 저장 링크를 삭제할까요?'))return;var a2=load();a2.splice(+t.dataset.del,1);store(a2);renderSaved();return;}
+  if(t.dataset.cdel!=null){if(!confirm('이 추가 제품을 삭제할까요?'))return;var c=loadCustom();c.splice(+t.dataset.cdel,1);storeCustom(c);renderCustomList();renderProducts($('q').value);return;}
 });
 
+$('c_add').addEventListener('click',addCustom);
 $('save').addEventListener('click',saveCur);
 $('dl').addEventListener('click',downloadCSV);
 $('clr').addEventListener('click',function(){if(load().length&&confirm('저장한 링크를 전부 삭제할까요?')){store([]);renderSaved();}});
 $('q').addEventListener('input',function(){renderProducts(this.value)});
 ['prod','src','med','kw'].forEach(function(i){$(i).addEventListener('input',gen);$(i).addEventListener('change',gen)});
-if($('qs'))$('qs').addEventListener('input',renderSaved);
-fillMedia();renderProducts('');renderSaved();loadPixelshop();
+$('qs').addEventListener('input',renderSaved);
+$('fmed').addEventListener('change',function(){localStorage.setItem(MEKEY,this.value);renderSaved()});
+$('fprod').addEventListener('change',renderSaved);
+fillMedia();renderCustomList();renderProducts('');renderSaved();loadPixelshop();
 </script></body></html>
