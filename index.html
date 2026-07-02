@@ -26,6 +26,17 @@ fbq('init',PIXEL_ID);
 fbq('track','PageView');
 if(key){fbq('track','ViewContent',{content_ids:[key],content_name:cname,content_type:'product'});}
 
+// 클릭 자체기록(시트 클릭로그) — 스토어분석 개편으로 소재별 유입이 사라질 때의 대체 원천.
+// sendBeacon = 리다이렉트 지연 0·이탈해도 전송. PII 없음(파라미터+클릭ID만). 실패해도 무해.
+try{
+  var GAS="https://script.google.com/macros/s/AKfycbyed6xA9MiulGxSLrDif71OiWYvK14dSrWOG9h7JprMdh6lIIzIw_Otmrcm0A-b5cOB/exec";
+  var pay=JSON.stringify({token:"rihoon-pixelshop-2026",type:"click",
+    src:params.get('nt_source')||'',med:params.get('nt_medium')||'',
+    detail:key,kw:params.get('nt_keyword')||'',fbclid:params.get('fbclid')||''});
+  if(navigator.sendBeacon){navigator.sendBeacon(GAS,new Blob([pay],{type:'text/plain'}));}
+  else{fetch(GAS,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:pay});}
+}catch(e){}
+
 var dest=item?item.url:((custom&&okHost(custom))?custom:"https://smartstore.naver.com/rihoon");
 params.delete('d');params.delete('pn');   // 내부용 파라미터는 목적지로 넘기지 않음
 var qs=params.toString();                  // 나머지 nt_* 전부 그대로 전달
