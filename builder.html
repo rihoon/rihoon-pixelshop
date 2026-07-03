@@ -59,6 +59,7 @@ details.add summary::-webkit-details-marker{display:none}
 <div class="tabs">
   <button class="tab active" data-tab="build">＋ 링크 만들기</button>
   <button class="tab" data-tab="saved">저장한 링크 <span id="tabcnt"></span></button>
+  <button class="tab" data-tab="sales">📊 소재별 매출</button>
 </div>
 
 <div id="tab-build">
@@ -117,6 +118,20 @@ details.add summary::-webkit-details-marker{display:none}
   <div id="savedwrap"></div>
 </div>
 </div><!-- /tab-saved -->
+
+<div id="tab-sales" style="display:none">
+<div class="card">
+  <div class="sync" id="salesinfo">불러오는 중…</div>
+  <div class="filters">
+    <input id="sq" placeholder="검색(제품·소재·날짜)" autocomplete="off">
+    <select id="sfprod"></select>
+  </div>
+  <h2>소재별 매출 <span id="scnt" style="color:var(--sub);font-weight:700"></span>
+    <button class="btn mini" id="sreload">새로고침</button></h2>
+  <div id="saleswrap"></div>
+  <div class="hint" style="margin-top:10px">픽셀샵 클릭로그 × 발주서(실구매)를 <b>마지막클릭 24h</b> 기준으로 매칭 — 매일 07:20 자동 갱신.<br>픽셀샵 URL을 쓰는 소재만 잡힙니다(전환 소재가 늘수록 촘촘해짐). 네이버 통계와 무관한 자체 데이터.</div>
+</div>
+</div><!-- /tab-sales -->
 
 <p class="foot">제품·저장링크: 링크빌더 시트(Apps Script 실시간 공유) · 기존 브라우저 저장분은 자동 병합<br>리훈 메타광고 자동화</p>
 </div>
@@ -292,10 +307,47 @@ function downloadCSV(){
   var d=new Date();var fn='링크빌더_저장링크_'+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)+'.csv';
   var url=URL.createObjectURL(blob);var el=document.createElement('a');el.href=url;el.download=fn;el.click();setTimeout(function(){URL.revokeObjectURL(url)},1000);}
 
+// ── 소재별 매출 탭 (시트 '소재별매출_자체'를 gviz로 직접 읽음 — 저장은 시트, 화면은 여기) ──
+var SALES=null;
+function gviz(sheet,cb){var nm='__gv'+(gviz._n=(gviz._n||0)+1);var s=document.createElement('script');
+  window[nm]=function(d){cb(d);try{delete window[nm]}catch(e){}s.parentNode&&s.parentNode.removeChild(s)};
+  s.onerror=function(){cb(null);s.parentNode&&s.parentNode.removeChild(s)};
+  s.src='https://docs.google.com/spreadsheets/d/'+encodeURIComponent('18qoZFuwFPls5_ThDl1P9GFQ2gKn2kHe2zB3_9W1uk9c')+'/gviz/tq?sheet='+encodeURIComponent(sheet)+'&tqx=responseHandler:'+nm;
+  document.head.appendChild(s);}
+function slugName(sl){var p=allProducts().filter(function(x){return x.slug===sl})[0];return p?p.name:sl;}
+function loadSales(force){
+  if(SALES&&!force){renderSales();return;}
+  $('salesinfo').textContent='불러오는 중…';
+  gviz('소재별매출_자체',function(d){
+    if(!d||d.status!=='ok'){SALES=[];$('salesinfo').textContent='⚠ 데이터를 못 불러왔어요';renderSales();return;}
+    SALES=(d.table.rows||[]).map(function(r){var c=r.c||[];function v(i){return c[i]&&c[i].v!=null?c[i].v:''}
+      return {d:String(v(0)),slug:String(v(1)),kw:String(v(2)),n:Number(v(3))||0,amt:Number(v(4))||0};})
+      .filter(function(r){return r.d&&r.slug;}).reverse();   // 최신 위로
+    $('salesinfo').textContent='☁ 자체 귀속 데이터 '+SALES.length+'행 (매일 07:20 갱신)';
+    // 제품 필터 채우기
+    var fp=$('sfprod');var cur=fp.value;var names={};SALES.forEach(function(r){names[slugName(r.slug)]=1});
+    fp.innerHTML='<option value="">제품 전체</option>'+Object.keys(names).sort().map(function(n){return '<option>'+esc(n)+'</option>'}).join('');
+    fp.value=cur||'';
+    renderSales();});}
+function renderSales(){
+  var w=$('saleswrap');var a=SALES||[];
+  var qf=($('sq').value||'').trim().toLowerCase();var fp=$('sfprod').value;
+  var body='',n=0,ta=0,tn=0;
+  a.forEach(function(r){
+    var nm=slugName(r.slug);
+    if(fp&&nm!==fp)return;
+    if(qf&&(r.d+' '+nm+' '+r.slug+' '+r.kw).toLowerCase().indexOf(qf)<0)return;
+    n++;ta+=r.amt;tn+=r.n;
+    body+='<tr><td class="nw">'+esc(r.d)+'</td><td class="prod">'+esc(nm)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="nw">'+r.n+'</td><td class="nw">₩'+r.amt.toLocaleString()+'</td></tr>';});
+  $('scnt').textContent=n?('('+n+'행 · '+tn+'건 · ₩'+ta.toLocaleString()+')'):'';
+  w.innerHTML=n?('<table><thead><tr><th>결제일</th><th>제품</th><th>소재</th><th>건수</th><th>매출</th></tr></thead><tbody>'+body+'</tbody></table>')
+    :'<div class="empty">아직 데이터가 없어요. 픽셀샵 링크를 단 소재에서 구매가 나오면 매일 아침 쌓입니다.</div>';}
+
 function switchTab(name){
-  ['build','saved'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
+  ['build','saved','sales'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
   Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){b.classList.toggle('active',b.dataset.tab===name)});
-  if(name==='saved')renderSaved();}
+  if(name==='saved')renderSaved();
+  if(name==='sales')loadSales();}
 
 document.addEventListener('click',function(e){
   var t=e.target;
@@ -318,6 +370,9 @@ $('clr').addEventListener('click',function(){
   if(REMOTE!==null){alert('공유 모드에선 안전을 위해 전체삭제를 막았어요. 각 줄의 삭제 버튼을 쓰세요.');return;}
   if(load().length&&confirm('저장한 링크를 전부 삭제할까요?')){store([]);renderSaved();}});
 $('q').addEventListener('input',function(){renderProducts(this.value)});
+$('sq').addEventListener('input',renderSales);
+$('sfprod').addEventListener('change',renderSales);
+$('sreload').addEventListener('click',function(){loadSales(true)});
 ['prod','src','med','kw'].forEach(function(i){$(i).addEventListener('input',gen);$(i).addEventListener('change',gen)});
 $('qs').addEventListener('input',renderSaved);
 $('fmed').addEventListener('change',function(){localStorage.setItem(MEKEY,this.value);renderSaved()});
