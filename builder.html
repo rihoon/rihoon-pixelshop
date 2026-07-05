@@ -223,9 +223,10 @@ function renderProducts(filter){
   gen();}
 
 function curProd(){var o=$('prod').options[$('prod').selectedIndex];return o?{slug:o.value,link:o.dataset.link||'',name:o.dataset.name||o.textContent}:null;}
-// 2026-07-06 nt_medium 소재인코딩(실험 성공): medium에 '담당자-소재번호'를 심는다 → 8/20 이후에도
-// 네이버 새 통계(스토어분석 경로3단계)가 소재별 판매금액을 계속 제공. nt_keyword는 8/19까지 병행.
-function mkqs(slug,src,med,kw){var m2=kw?(med+'-'+kw):med;
+// 2026-07-06 nt_medium 인코딩(실험 성공): medium에 '담당자.제품.소재번호'를 심는다 → 8/20 이후에도
+// 네이버 새 통계(경로3단계)가 소재별 판매금액을 제품 식별과 함께 제공. 구분자 '.'(소재번호에 '-' 있어서).
+// nt_detail·nt_keyword는 8/19까지 병행(기존 보고서용).
+function mkqs(slug,src,med,kw){var m2=kw?(med+'.'+slug+'.'+kw):med;
   return 'nt_source='+encodeURIComponent(src)+'&nt_medium='+encodeURIComponent(m2)+'&nt_detail='+encodeURIComponent(slug)+(kw?'&nt_keyword='+encodeURIComponent(kw):'');}
 function isReg(slug){return !!(PXKEYS&&PXKEYS[slug]);}
 function psURL(p,src,med,kw){var u=PIXELSHOP+'?'+mkqs(p.slug,src,med,kw);
