@@ -48,6 +48,21 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 #savedwrap .acts{display:flex;gap:4px}
 #savedwrap td.tt{font-weight:600;color:var(--ink)}
 #savedwrap .muted{color:#c4c4c4;font-weight:400}
+/* 소재별 매출 피벗 */
+.pivnote{font-size:11.5px;color:var(--sub);margin-bottom:8px}
+.pivscroll{overflow-x:auto}
+table.piv{width:100%;border-collapse:collapse;font-size:12px}
+.piv th,.piv td{padding:6px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+.piv th{color:var(--sub);font-weight:700;font-size:11px;background:var(--card)}
+.piv th.pl,.piv td.pl{text-align:left;position:sticky;left:0;background:var(--card);max-width:210px;overflow:hidden;text-overflow:ellipsis;z-index:1}
+.piv .dc{font-variant-numeric:tabular-nums;min-width:44px}
+.piv .mut{color:#dcdcdc}
+.piv .tot{font-weight:800;background:var(--field)}
+.piv tr.prow{cursor:pointer}
+.piv tr.prow:hover td.pl{color:var(--accent)}
+.piv .pn{font-weight:600}.piv .sub{color:var(--sub);font-size:11px}
+.piv tr.grow td{font-weight:800;border-top:2px solid #ddd;background:var(--field)}
+.piv .detc{text-align:left;color:var(--sub);font-size:11.5px;background:#fafafa;white-space:normal;line-height:1.7}
 .mini{font-size:11px;padding:3px 8px}
 .empty{color:var(--sub);font-size:13px;text-align:center;padding:18px 0}
 .filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.filters>*{flex:1;min-width:120px}
@@ -421,20 +436,49 @@ function loadSales(force){
     fp.innerHTML='<option value="">제품 전체</option>'+Object.keys(names).sort().map(function(n){return '<option>'+esc(n)+'</option>'}).join('');
     fp.value=cur||'';
     renderSales();});}
+function fmtK(a){return a>=1000?Math.round(a/1000).toLocaleString():(a>0?'0':'');}   // 천원 단위
+function dlabel(dt){var p=String(dt).split('-');return p.length>=3?((+p[1])+'/'+(+p[2])):dt;}
 function renderSales(){
-  TITLEMAP=null;   // 저장링크가 늦게 로드돼도 매출 렌더 시 제목맵 최신 재구성(2026-07-08)
+  TITLEMAP=null;   // 저장링크가 늦게 로드돼도 제목맵 최신 재구성
   var w=$('saleswrap');var a=SALES||[];
   var qf=($('sq').value||'').trim().toLowerCase();var fp=$('sfprod').value;
-  var body='',n=0,ta=0,tn=0;
+  // 1) 소재별 집계(+날짜별)
+  var byKey={},dset={};
   a.forEach(function(r){
-    var nm=slugName(r.slug);var tt=titleFor(r.slug,r.kw);
+    var nm=slugName(r.slug),tt=titleFor(r.slug,r.kw);
     if(fp&&nm!==fp)return;
     if(qf&&(r.d+' '+nm+' '+r.slug+' '+r.kw+' '+tt).toLowerCase().indexOf(qf)<0)return;
-    n++;ta+=r.amt;tn+=r.n;
-    body+='<tr><td class="nw">'+esc(r.d)+'</td><td class="prod">'+esc(nm)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod">'+esc(tt)+'</td><td class="nw">'+r.n+'</td><td class="nw">₩'+r.amt.toLocaleString()+'</td></tr>';});
-  $('scnt').textContent=n?('('+n+'행 · '+tn+'건 · ₩'+ta.toLocaleString()+')'):'';
-  w.innerHTML=n?('<table><thead><tr><th>결제일</th><th>제품</th><th>소재</th><th>제목</th><th>건수</th><th>매출</th></tr></thead><tbody>'+body+'</tbody></table>')
-    :'<div class="empty">아직 데이터가 없어요. 픽셀샵 링크를 단 소재에서 구매가 나오면 매일 아침 쌓입니다.</div>';}
+    var key=r.slug+'|'+r.kw;var o=byKey[key]||(byKey[key]={nm:nm,kw:r.kw,tt:tt,total:0,tn:0,byd:{}});
+    o.total+=r.amt;o.tn+=r.n;var dd=o.byd[r.d]||(o.byd[r.d]={amt:0,n:0});dd.amt+=r.amt;dd.n+=r.n;dset[r.d]=1;});
+  var keys=Object.keys(byKey);
+  if(!keys.length){$('scnt').textContent='';w.innerHTML='<div class="empty">아직 데이터가 없어요. 픽셀샵 링크를 단 소재에서 구매가 나오면 매일 아침 쌓입니다.</div>';return;}
+  // 2) 날짜열: 오름차순, 최근 14일(그 이전은 '이전'으로 합산)
+  var dates=Object.keys(dset).sort(),older=[];
+  if(dates.length>14){older=dates.slice(0,dates.length-14);dates=dates.slice(dates.length-14);}
+  // 3) 소재 총매출 desc 정렬
+  keys.sort(function(x,y){return byKey[y].total-byKey[x].total;});
+  var maxCell=1;keys.forEach(function(k){dates.forEach(function(dt){var d=byKey[k].byd[dt];if(d&&d.amt>maxCell)maxCell=d.amt;});
+    if(older.length){var oa=0;older.forEach(function(dt){if(byKey[k].byd[dt])oa+=byKey[k].byd[dt].amt;});if(oa>maxCell)maxCell=oa;}});
+  function cell(amt,nn){if(!amt)return '<td class="dc mut">·</td>';
+    var al=(0.06+0.34*(amt/maxCell)).toFixed(3);
+    return '<td class="dc" style="background:rgba(80,80,80,'+al+')" title="'+nn+'건 · ₩'+amt.toLocaleString()+'">'+fmtK(amt)+'</td>';}
+  // 4) 헤더
+  var ncol=2+dates.length+(older.length?1:0);
+  var head='<tr><th class="pl">소재</th>'+(older.length?'<th class="dc">이전</th>':'')+dates.map(function(dt){return '<th class="dc">'+dlabel(dt)+'</th>';}).join('')+'<th class="tot">합계</th></tr>';
+  // 5) 본문 + 컬럼합계
+  var body='',colT={},grand=0,grandN=0;
+  keys.forEach(function(k,ri){var o=byKey[k];
+    var label='<span class="pn">'+esc(o.nm)+'</span> <b>'+esc(o.kw)+'</b>'+(o.tt?' <span class="sub">'+esc(o.tt)+'</span>':'');
+    var row='<tr class="prow" data-prow="'+ri+'"><td class="pl">▸ '+label+'</td>';
+    if(older.length){var oa=0,on=0;older.forEach(function(dt){if(o.byd[dt]){oa+=o.byd[dt].amt;on+=o.byd[dt].n;}});row+=cell(oa,on);colT['이전']=(colT['이전']||0)+oa;}
+    dates.forEach(function(dt){var dd=o.byd[dt];var amt=dd?dd.amt:0,nn=dd?dd.n:0;row+=cell(amt,nn);colT[dt]=(colT[dt]||0)+amt;});
+    row+='<td class="tot">'+fmtK(o.total)+'</td></tr>';body+=row;grand+=o.total;grandN+=o.tn;
+    var alld=Object.keys(o.byd).sort();
+    var det=alld.map(function(dt){return dlabel(dt)+' '+o.byd[dt].n+'건 ₩'+o.byd[dt].amt.toLocaleString();}).join('   ·   ');
+    body+='<tr class="pdet" id="pdet'+ri+'" style="display:none"><td colspan="'+ncol+'" class="detc">'+esc(det)+'</td></tr>';});
+  var grow='<tr class="grow"><td class="pl">합계</td>'+(older.length?'<td class="tot">'+fmtK(colT['이전']||0)+'</td>':'')+dates.map(function(dt){return '<td class="tot">'+fmtK(colT[dt]||0)+'</td>';}).join('')+'<td class="tot">'+fmtK(grand)+'</td></tr>';
+  $('scnt').textContent='('+keys.length+'개 소재 · '+grandN+'건 · ₩'+grand.toLocaleString()+')';
+  w.innerHTML='<div class="pivnote">칸 = 천원 · 진할수록 매출 큼 · <b>소재 줄 클릭</b> = 날짜별 상세(건수·금액)</div><div class="pivscroll"><table class="piv"><thead>'+head+'</thead><tbody>'+body+grow+'</tbody></table></div>';}
 
 function switchTab(name){
   ['build','saved','sales'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
@@ -445,6 +489,8 @@ function switchTab(name){
 document.addEventListener('click',function(e){
   var t=e.target;
   if(t.classList.contains('tab')){switchTab(t.dataset.tab);return;}
+  var prow=t.closest&&t.closest('tr.prow');   // 피벗 소재 줄 클릭 → 날짜별 상세 토글
+  if(prow&&prow.dataset.prow!=null){var dd=$('pdet'+prow.dataset.prow);if(dd)dd.style.display=(dd.style.display==='none'?'':'none');return;}
   if(t.classList.contains('btn')&&t.dataset.t){var v=$(t.dataset.t).textContent;if(v)navigator.clipboard.writeText(v).then(function(){t.textContent='복사됨';t.classList.add('done');setTimeout(function(){t.textContent='복사';t.classList.remove('done')},1100)});return;}
   if(t.dataset.open){var u=$(t.dataset.open).textContent;if(u)window.open(u,'_blank');return;}
   if(t.dataset.copy!=null){var r=effSaved()[+t.dataset.copy];if(r)navigator.clipboard.writeText(r.ps).then(function(){t.textContent='✓';setTimeout(function(){t.textContent='복사'},900)});return;}
