@@ -212,7 +212,9 @@ function loadSavedRemote(attempt){
     if(d&&d.status==='ok'&&d.table){
       var arr=(d.table.rows||[]).map(mapSavedRow).filter(function(o){return o.id&&o.id!=='id';});
       SAVED_LOADING=false; REMOTE=arr; cacheRemote(arr);
-      $('sync').textContent='☁ 공유 저장 '+arr.length+'개 (모두와 공유됨)'; migrateLocal(); renderSaved(); return;
+      $('sync').textContent='☁ 공유 저장 '+arr.length+'개 (모두와 공유됨)'; migrateLocal(); renderSaved();
+      if(SALES)renderSales();   // 저장링크가 늦게 왔으면 매출 탭 제목도 갱신
+      return;
     }
     if(attempt<4){setTimeout(function(){loadSavedRemote(attempt+1)}, 900*attempt); renderSaved(); return;}
     SAVED_LOADING=false; if(REMOTE===null){$('sync').textContent='⚠ 불러오기 실패 — 새로고침(Ctrl+F5)';} renderSaved();
@@ -387,6 +389,7 @@ function loadSales(force){
     fp.value=cur||'';
     renderSales();});}
 function renderSales(){
+  TITLEMAP=null;   // 저장링크가 늦게 로드돼도 매출 렌더 시 제목맵 최신 재구성(2026-07-08)
   var w=$('saleswrap');var a=SALES||[];
   var qf=($('sq').value||'').trim().toLowerCase();var fp=$('sfprod').value;
   var body='',n=0,ta=0,tn=0;
