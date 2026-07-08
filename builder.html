@@ -44,6 +44,8 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 #savedwrap th,#savedwrap td{white-space:nowrap}
 #savedwrap td.prod{white-space:normal;word-break:keep-all;min-width:120px;max-width:200px;line-height:1.35}
 #savedwrap .acts{display:flex;gap:4px}
+input.tedit{width:100%;padding:5px 7px;font-size:12px;border:1px solid var(--line);border-radius:7px;background:var(--field);transition:background .2s}
+input.tedit:focus{border-color:#888;outline:none}
 .mini{font-size:11px;padding:3px 8px}
 .empty{color:var(--sub);font-size:13px;text-align:center;padding:18px 0}
 .filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.filters>*{flex:1;min-width:120px}
@@ -149,6 +151,7 @@ var SHARED=null;    // 공유 제품목록(GAS)
 var REMOTE=null;    // 공유 저장링크(GAS). null=공유불가→로컬폴백
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function esca(s){return esc(s).replace(/"/g,'&quot;')}  // 속성값 안전(따옴표까지)
 function load(){try{return JSON.parse(localStorage.getItem(LSKEY)||'[]')}catch(e){return[]}}
 function store(a){localStorage.setItem(LSKEY,JSON.stringify(a))}
 function allProducts(){return (SHARED&&SHARED.length)?SHARED:PRODUCTS;}
@@ -182,6 +185,14 @@ function postSaveBatch(items,cb){
    .then(function(){if(cb)setTimeout(cb,1300)}).catch(function(){});}
 function postDel(id){fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
   body:JSON.stringify({token:GAS_TOKEN,type:'delsave',id:id})}).catch(function(){});}
+// 소재제목 편집(기존 링크 포함) — 시트 K열만 수정. 로컬/REMOTE 즉시 반영 후 제목맵 무효화.
+function postUpdateTitle(id,title){
+  if(!id)return;
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({token:GAS_TOKEN,type:'updatetitle',id:id,title:title})}).catch(function(){});
+  if(REMOTE!==null){REMOTE.forEach(function(x){if(x.id===id)x.title=title;});}
+  var loc=load(),ch=false;loc.forEach(function(x){if((x.id||'')===id){x.title=title;ch=true;}});if(ch)store(loc);
+  TITLEMAP=null;}
 
 function loadSavedRemote(){
   jsonp(GAS_URL+'?what=saved',function(d){
@@ -297,7 +308,7 @@ function renderSaved(){
     if(fp&&r.name!==fp)return;
     if(qf&&(''+r.name+' '+r.kw+' '+(r.title||'')+' '+r.ps+' '+r.med).toLowerCase().indexOf(qf)<0)return;
     shown++;
-    body+='<tr><td class="nw">'+esc(fmtTs(r.ts))+'</td><td class="prod">'+esc(r.name)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod">'+esc(r.title||'')+'</td><td class="nw">'+esc(r.medLabel||medLabel(r.med))+'</td><td class="nw">'+pxLabel(r.slug)+'</td>'+
+    body+='<tr><td class="nw">'+esc(fmtTs(r.ts))+'</td><td class="prod">'+esc(r.name)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod"><input class="tedit" data-tid="'+esca(r.id||'')+'" value="'+esca(r.title||'')+'" placeholder="제목 입력" autocomplete="off"></td><td class="nw">'+esc(r.medLabel||medLabel(r.med))+'</td><td class="nw">'+pxLabel(r.slug)+'</td>'+
       '<td><span class="acts"><button class="btn mini" data-copy="'+i+'">복사</button><button class="btn mini" data-openi="'+i+'">열기</button><button class="btn mini" data-del="'+i+'">삭제</button></span></td></tr>';
   });
   $('cnt').textContent='('+((qf||fm||fp)?shown+'/'+all.length:all.length)+')';
@@ -374,6 +385,12 @@ document.addEventListener('click',function(e){
     renderSaved();return;}
 });
 
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.classList&&t.classList.contains('tedit')){
+    postUpdateTitle(t.dataset.tid,(t.value||'').trim());
+    t.style.background='#e8f5e9';setTimeout(function(){t.style.background=''},700);
+  }});
 $('c_add').addEventListener('click',addProduct);
 $('save').addEventListener('click',saveCur);
 $('dl').addEventListener('click',downloadCSV);
