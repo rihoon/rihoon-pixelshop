@@ -275,14 +275,14 @@ function addKV(kind){   // kind: 'source' | 'medium'
   if(!lab){alert((isS?'매체':'담당자')+' 이름을 입력하세요.');return;}
   if(!okCode(code)){alert('코드는 영문소문자·숫자·_ 만 가능해요'+(isS?' (예: kakao)':' (예: traffic_j)'));return;}
   if(arr.some(function(x){return x.code===code})){alert('이미 있는 코드예요.');return;}
-  hint.textContent='등록 중…';
+  // 낙관적: 즉시 드롭다운 반영(바로 사용 가능) + 백그라운드로 시트 공유
+  arr.push({code:code,label:lab});fillMedia();fillAdminHints();
+  $(isS?'s_label':'m_label').value='';$(isS?'s_code':'m_code').value='';
+  hint.textContent='✓ 등록됨 — 링크 만들기 목록에 추가됐어요 (공유 저장 중…)';
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify({token:GAS_TOKEN,type:isS?'addsource':'addmedium',code:code,label:lab})})
-   .then(function(){
-      arr.push({code:code,label:lab});fillMedia();fillAdminHints();
-      $(isS?'s_label':'m_label').value='';$(isS?'s_code':'m_code').value='';
-      hint.textContent='✓ 등록 완료 — 링크 만들기 목록에 바로 추가됐어요.';
-   }).catch(function(){hint.textContent='⚠️ 등록 실패(네트워크) — 다시 시도해주세요.';});}
+   .then(function(){hint.textContent='✓ 등록 완료 — 모두에게 공유됩니다.';})
+   .catch(function(){hint.textContent='✓ 이 브라우저엔 추가됨 · ⚠ 공유 저장 실패 — 새로고침 후 다시 등록하면 공유됩니다.';});}
 
 function renderProducts(filter){
   var sel=$('prod');var prev=sel.value;sel.innerHTML='';var f=(filter||'').trim().toLowerCase();var list=allProducts();
