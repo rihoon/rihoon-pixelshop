@@ -201,11 +201,21 @@ function loadSavedRemote(){
   });}
 function migrateLocal(){
   if(REMOTE===null)return; var loc=load(); if(!loc.length)return;
-  var have={};REMOTE.forEach(function(r){have[r.id]=1});
-  var up=[],changed=false;
-  loc.forEach(function(r){if(!r.id){r.id=migId(r);changed=true;} if(!r.medLabel){r.medLabel=medLabel(r.med);changed=true;} if(!have[r.id]){up.push(r);have[r.id]=1;}});
+  var byId={};REMOTE.forEach(function(r){byId[r.id]=r;});
+  var up=[],changed=false,restored=0;
+  loc.forEach(function(r){
+    if(!r.id){r.id=migId(r);changed=true;}
+    if(!r.medLabel){r.medLabel=medLabel(r.med);changed=true;}
+    var rem=byId[r.id];
+    if(!rem){up.push(r);byId[r.id]=r;}
+    else if((r.title||'').trim() && !(rem.title||'').trim()){
+      // 로컬엔 제목 있는데 공유엔 없음 → 예전 제목 자동 복구(시트에 채움) (2026-07-08 대표님)
+      rem.title=r.title.trim(); postUpdateTitle(r.id, r.title.trim()); restored++;
+    }
+  });
   if(changed)store(loc);
   if(up.length){$('sync').textContent='☁ 이 브라우저의 기존 '+up.length+'개 업로드 중…';postSaveBatch(up,function(){loadSavedRemote();});}
+  if(restored){TITLEMAP=null; $('sync').textContent='☁ 예전 제목 '+restored+'개 자동 복구됨 · 공유 저장 '+REMOTE.length+'개'; renderSaved();}
 }
 // 화면에 쓸 저장목록: 공유 + (아직 업로드 안된 로컬)  — 최신 위로
 function effSaved(){
