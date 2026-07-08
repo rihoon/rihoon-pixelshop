@@ -339,7 +339,8 @@ function saveCur(){
   var now=new Date();var ts=(now.getMonth()+1)+'/'+now.getDate()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
   var entry={id:newId(),ts:ts,name:p.name,slug:p.slug,src:src,med:med,medLabel:medLabel(med),kw:kw,title:kwt,ps:ps,raw:raw};
   var loc=load();loc.unshift(entry);store(loc);              // 로컬 백업(안 날아감)
-  if(REMOTE!==null){REMOTE.push(entry);postSaveBatch([entry]);}  // 공유 반영
+  if(REMOTE!==null){REMOTE.push(entry);cacheRemote(REMOTE);}
+  postSaveBatch([entry]);   // ★공유 로드 실패(REMOTE=null)여도 항상 시트에 기록 → 모두에게 공유 (2026-07-08)
   renderSaved();
   var b=$('save');var t=b.textContent;b.textContent='저장됨 ✓';b.classList.add('done');setTimeout(function(){b.textContent=t;b.classList.remove('done')},1100);}
 
@@ -452,7 +453,8 @@ document.addEventListener('click',function(e){
   if(t.dataset.del!=null){var it=effSaved()[+t.dataset.del];if(!it)return;if(!confirm('이 저장 링크를 삭제할까요? (공유목록에서도 삭제됩니다)'))return;
     var kid=it.id||migId(it);
     store(load().filter(function(x){return (x.id||migId(x))!==kid}));
-    if(REMOTE!==null){REMOTE=REMOTE.filter(function(x){return x.id!==it.id});postDel(it.id);}
+    if(REMOTE!==null){REMOTE=REMOTE.filter(function(x){return x.id!==it.id});cacheRemote(REMOTE);}
+    if(it.id)postDel(it.id);   // ★항상 공유 시트에서도 삭제 (2026-07-08)
     renderSaved();return;}
 });
 
