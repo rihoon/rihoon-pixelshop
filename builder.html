@@ -177,6 +177,7 @@ var LSKEY='rihoon_linkbuilder_saved', MEKEY='rihoon_lb_medfilter';
 var $=function(i){return document.getElementById(i)};
 var PXKEYS=null;    // 픽셀샵 제품맵
 var SHARED=null;    // 공유 제품목록(GAS)
+var PROD_DIRTY=false,KV_DIRTY=false;   // 이 세션에서 제품/매체·담당자를 수정하면, 늦게 온 loadShared가 덮어쓰지 못하게
 var REMOTE=null;    // 공유 저장링크(GAS). null=공유불가→로컬폴백
 var SAVED_LOADING=false;   // 공유 저장링크 로딩중(재시도 포함) — 빈 메시지 대신 '불러오는 중'
 
@@ -201,17 +202,20 @@ function mergeKV(arr,extra){if(!extra||!extra.length)return false;var have={};ar
   extra.forEach(function(x){if(x&&x.code&&!have[x.code]){arr.push({code:x.code,label:x.label||x.code});have[x.code]=1;ch=true;}});return ch;}
 function loadShared(){
   jsonp(GAS_URL,function(d){
-    if(d&&d.ok&&d.products&&d.products.length){SHARED=d.products;$('pcount').textContent='· 공유 '+d.products.length+'개';renderProducts($('q').value);}
+    if(d&&d.ok&&d.products&&d.products.length){$('pcount').textContent='· 공유 '+d.products.length+'개';if(!PROD_DIRTY){SHARED=d.products;renderProducts($('q').value);}}
     else{$('pcount').textContent='· (오프라인: 임베드 '+PRODUCTS.length+'개)';}
-    if(d&&d.ok){   // DB가 매체·담당자의 원천 — 있으면 통째로 교체(삭제도 반영되게)
-      if(d.sources&&d.sources.length){SOURCES.length=0;d.sources.forEach(function(x){SOURCES.push({code:x.code,label:x.label||x.code})});}
-      if(d.mediums&&d.mediums.length){MEDIA.length=0;d.mediums.forEach(function(x){MEDIA.push({code:x.code,label:x.label||x.code})});}
-      fillMedia();fillAdminHints();
+    if(d&&d.ok){
+      if(!KV_DIRTY){   // 이 세션에서 매체/담당자 수정 안 했을 때만 DB로 교체(수정 되돌림 방지)
+        if(d.sources&&d.sources.length){SOURCES.length=0;d.sources.forEach(function(x){SOURCES.push({code:x.code,label:x.label||x.code})});}
+        if(d.mediums&&d.mediums.length){MEDIA.length=0;d.mediums.forEach(function(x){MEDIA.push({code:x.code,label:x.label||x.code})});}
+        fillMedia();
+      }
+      fillAdminHints();
     }
   });}
 
 function loadPixelshop(){
-  fetch('index.html',{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){
+  fetch(PIXELSHOP+'index.html',{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){
     var m=t.match(/var MAP=(\{[\s\S]*?\});/);PXKEYS={};
     if(m){try{var o=JSON.parse(m[1]);Object.keys(o).forEach(function(k){PXKEYS[k]=1})}catch(e){}}
     gen();renderSaved();
@@ -308,24 +312,24 @@ function fillAdminHints(){
 function delKV(kind,code){
   var isS=(kind==='source');var arr=isS?SOURCES:MEDIA;var it=arr.filter(function(x){return x.code===code})[0];if(!it)return;
   if(!confirm('"'+it.label+'" '+(isS?'매체':'담당자')+'를 삭제할까요?\n(이미 만든 링크엔 영향 없어요)'))return;
-  var i=arr.map(function(x){return x.code}).indexOf(code);if(i>=0)arr.splice(i,1);fillMedia();fillAdminHints();
+  KV_DIRTY=true;var i=arr.map(function(x){return x.code}).indexOf(code);if(i>=0)arr.splice(i,1);fillMedia();fillAdminHints();
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:GAS_TOKEN,type:isS?'delsource':'delmedium',code:code})}).catch(function(){});}
 function editKV(kind,code){
   var isS=(kind==='source');var arr=isS?SOURCES:MEDIA;var it=arr.filter(function(x){return x.code===code})[0];if(!it)return;
   var nl=prompt((isS?'매체':'담당자')+' 이름 수정 (코드 '+code+'는 안 바뀜)',it.label);if(nl===null)return;nl=nl.trim();if(!nl)return;
-  it.label=nl;fillMedia();fillAdminHints();
+  KV_DIRTY=true;it.label=nl;fillMedia();fillAdminHints();
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:GAS_TOKEN,type:isS?'editsource':'editmedium',code:code,label:nl})}).catch(function(){});}
 function delProd(slug){
   var p=allProducts().filter(function(x){return x.slug===slug})[0];if(!p)return;
   if(!confirm('"'+p.name+'" 제품을 삭제할까요?'))return;
-  if(SHARED){var i=SHARED.map(function(x){return x.slug}).indexOf(slug);if(i>=0)SHARED.splice(i,1);}
+  PROD_DIRTY=true;if(!SHARED)SHARED=PRODUCTS.slice();var i=SHARED.map(function(x){return x.slug}).indexOf(slug);if(i>=0)SHARED.splice(i,1);
   renderProducts($('q').value);fillAdminHints();
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:GAS_TOKEN,type:'delproduct',slug:slug})}).catch(function(){});}
 function editProd(slug){
   var p=allProducts().filter(function(x){return x.slug===slug})[0];if(!p)return;
   var nn=prompt('제품명 수정',p.name);if(nn===null)return;nn=nn.trim();if(!nn)return;
   var nl=prompt('마케팅링크 수정(네이버 주소, 안 바꾸려면 그대로 두세요)',p.link||'');if(nl===null)nl=p.link||'';nl=nl.trim();
-  p.name=nn;if(nl)p.link=nl;p.usable=(p.link||'').indexOf('http')===0;
+  PROD_DIRTY=true;p.name=nn;if(nl)p.link=nl;p.usable=(p.link||'').indexOf('http')===0;
   renderProducts($('q').value);fillAdminHints();gen();
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:GAS_TOKEN,type:'editproduct',slug:slug,name:nn,link:nl})}).catch(function(){});}
 function addKV(kind){   // kind: 'source' | 'medium'
@@ -335,7 +339,7 @@ function addKV(kind){   // kind: 'source' | 'medium'
   if(!okCode(code)){alert('코드는 영문소문자·숫자·_ 만 가능해요'+(isS?' (예: kakao)':' (예: traffic_j)'));return;}
   if(arr.some(function(x){return x.code===code})){alert('이미 있는 코드예요.');return;}
   // 낙관적: 즉시 드롭다운 반영(바로 사용 가능) + 백그라운드로 시트 공유
-  arr.push({code:code,label:lab});fillMedia();fillAdminHints();
+  KV_DIRTY=true;arr.push({code:code,label:lab});fillMedia();fillAdminHints();
   $(isS?'s_label':'m_label').value='';$(isS?'s_code':'m_code').value='';
   hint.textContent='✓ 등록됨 — 링크 만들기 목록에 추가됐어요 (공유 저장 중…)';
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -378,17 +382,17 @@ function addProduct(){
   if(!/^[a-z0-9_]+$/.test(slug)){alert('슬러그는 영문소문자·숫자·_ 만 가능해요 (예: story_diary_27).');return;}
   if(!okNaver(link)){alert('마케팅링크는 네이버(naver.com) 주소여야 해요.');return;}
   if(allProducts().some(function(x){return x.slug===slug})){alert('이미 있는 슬러그예요.');return;}
-  $('c_hint').textContent='등록 중…';
+  // 낙관적: 즉시 목록 반영(느린 GAS 안 기다림) + 백그라운드 공유
+  PROD_DIRTY=true;if(!SHARED)SHARED=PRODUCTS.slice();
+  SHARED.push({slug:slug,name:name,cat:'＋웹앱추가',link:link,usable:link.indexOf('http')===0});
+  $('c_name').value='';$('c_slug').value='';$('c_link').value='';
+  renderProducts('');fillAdminHints();
+  var sel=$('prod');for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===slug){sel.selectedIndex=i;break;}}gen();
+  $('c_hint').textContent='✓ 등록됨 — 목록에 추가됐어요 (공유 저장 중…)';
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify({token:GAS_TOKEN,type:'product',slug:slug,name:name,cat:'＋웹앱추가',link:link})})
-   .then(function(){setTimeout(function(){loadShared();
-      $('c_name').value='';$('c_slug').value='';$('c_link').value='';
-      setTimeout(function(){var ok=allProducts().some(function(x){return x.slug===slug});
-        $('c_hint').textContent=ok?'✓ 등록 완료 — 모두에게 공유됨. 목록에서 선택해 쓰세요.':'요청 보냄 — 잠시 후 목록 확인(중복/오류면 안 뜰 수 있음).';
-        if(ok){var sel=$('prod');for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===slug){sel.selectedIndex=i;break;}}gen();}
-      },1300);
-   },1400);})
-   .catch(function(){$('c_hint').textContent='⚠️ 등록 실패(네트워크) — 다시 시도해주세요.';});}
+   .then(function(){$('c_hint').textContent='✓ 등록 완료 — 모두에게 공유됩니다.';})
+   .catch(function(){$('c_hint').textContent='✓ 이 브라우저엔 추가됨 · ⚠ 공유 저장 실패 — 새로고침 후 다시 등록하면 공유됩니다.';});}
 
 var EDITING_ID=null;
 function startEdit(it){
