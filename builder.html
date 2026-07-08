@@ -131,6 +131,7 @@ details.add summary::-webkit-details-marker{display:none}
     <label>마케팅링크(네이버)</label><input id="c_link" placeholder="https://mkt.shopping.naver.com/link/..." autocomplete="off">
     <div class="save-row"><button class="btn solid" id="c_add">＋ 제품 등록</button></div>
     <div class="hint" id="c_hint">등록하면 시트에 저장돼 모두에게 바로 공유됩니다.</div>
+    <input id="p_search" placeholder="🔍 수정/삭제할 제품 검색" autocomplete="off" style="margin-top:12px">
     <div class="reglist" id="p_list"></div>
   </div>
   <div class="card">
@@ -192,7 +193,11 @@ function loadShared(){
   jsonp(GAS_URL,function(d){
     if(d&&d.ok&&d.products&&d.products.length){SHARED=d.products;$('pcount').textContent='· 공유 '+d.products.length+'개';renderProducts($('q').value);}
     else{$('pcount').textContent='· (오프라인: 임베드 '+PRODUCTS.length+'개)';}
-    if(d&&d.ok){var c1=mergeKV(SOURCES,d.sources),c2=mergeKV(MEDIA,d.mediums);if(c1||c2)fillMedia();fillAdminHints();}
+    if(d&&d.ok){   // DB가 매체·담당자의 원천 — 있으면 통째로 교체(삭제도 반영되게)
+      if(d.sources&&d.sources.length){SOURCES.length=0;d.sources.forEach(function(x){SOURCES.push({code:x.code,label:x.label||x.code})});}
+      if(d.mediums&&d.mediums.length){MEDIA.length=0;d.mediums.forEach(function(x){MEDIA.push({code:x.code,label:x.label||x.code})});}
+      fillMedia();fillAdminHints();
+    }
   });}
 
 function loadPixelshop(){
@@ -281,12 +286,11 @@ function kvRow(name,code,dk){   // dk: 'src'|'med'|'prod'
     +'<span class="acts"><button class="btn mini" data-edit'+dk+'="'+esca(code)+'">수정</button>'
     +'<button class="btn mini" data-del'+dk+'="'+esca(code)+'">삭제</button></span></div>';}
 function fillAdminHints(){
-  var cs=SOURCES.filter(function(s){return !BAKED_SRC[s.code]});
-  var cm=MEDIA.filter(function(m){return !BAKED_MED[m.code]});
-  var cp=allProducts().filter(function(p){return (p.cat||'')==='＋웹앱추가'});
-  if($('s_list'))$('s_list').innerHTML='<div class="ltitle">등록한 매체 (수정/삭제)</div>'+(cs.length?cs.map(function(x){return kvRow(x.label,x.code,'src')}).join(''):'<span class="muted">아직 없음 · 기본 매체는 여기 안 뜹니다</span>');
-  if($('m_list'))$('m_list').innerHTML='<div class="ltitle">등록한 담당자 (수정/삭제)</div>'+(cm.length?cm.map(function(x){return kvRow(x.label,x.code,'med')}).join(''):'<span class="muted">아직 없음</span>');
-  if($('p_list'))$('p_list').innerHTML='<div class="ltitle">등록한 제품 (수정/삭제)</div>'+(cp.length?cp.map(function(x){return kvRow(x.name,x.slug,'prod')}).join(''):'<span class="muted">아직 없음 · 웹에서 등록한 제품만 여기 뜹니다</span>');}
+  var q=($('p_search')?$('p_search').value:'').trim().toLowerCase();
+  var cp=allProducts();if(q)cp=cp.filter(function(p){return (p.name+' '+p.slug).toLowerCase().indexOf(q)>=0;});
+  if($('s_list'))$('s_list').innerHTML='<div class="ltitle">매체 목록 (수정/삭제)</div>'+(SOURCES.length?SOURCES.map(function(x){return kvRow(x.label,x.code,'src')}).join(''):'<span class="muted">없음</span>');
+  if($('m_list'))$('m_list').innerHTML='<div class="ltitle">담당자 목록 (수정/삭제)</div>'+(MEDIA.length?MEDIA.map(function(x){return kvRow(x.label,x.code,'med')}).join(''):'<span class="muted">없음</span>');
+  if($('p_list'))$('p_list').innerHTML='<div class="ltitle">제품 목록 ('+cp.length+'개'+(q?' 검색':'')+') · 수정/삭제</div>'+(cp.length?cp.slice(0,200).map(function(x){return kvRow(x.name,x.slug,'prod')}).join('')+(cp.length>200?'<div class="muted">…앞 200개만 표시(검색으로 좁히세요)</div>':''):'<span class="muted">없음</span>');}
 function delKV(kind,code){
   var isS=(kind==='source');var arr=isS?SOURCES:MEDIA;var it=arr.filter(function(x){return x.code===code})[0];if(!it)return;
   if(!confirm('"'+it.label+'" '+(isS?'매체':'담당자')+'를 삭제할까요?\n(이미 만든 링크엔 영향 없어요)'))return;
@@ -504,6 +508,7 @@ document.addEventListener('change',function(e){
 $('c_add').addEventListener('click',addProduct);
 $('s_add').addEventListener('click',function(){addKV('source')});
 $('m_add').addEventListener('click',function(){addKV('medium')});
+$('p_search').addEventListener('input',fillAdminHints);
 $('save').addEventListener('click',saveCur);
 $('cancelEdit').addEventListener('click',cancelEdit);
 $('dl').addEventListener('click',downloadCSV);
