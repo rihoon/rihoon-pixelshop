@@ -46,8 +46,8 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 #savedwrap tbody tr{height:40px}
 #savedwrap td.prod{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
 #savedwrap .acts{display:flex;gap:4px}
-input.tedit{width:100%;box-sizing:border-box;padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:7px;background:var(--field);transition:background .2s;vertical-align:middle}
-input.tedit:focus{border-color:#888;outline:none}
+#savedwrap td.tt{font-weight:600;color:var(--ink)}
+#savedwrap .muted{color:#c4c4c4;font-weight:400}
 .mini{font-size:11px;padding:3px 8px}
 .empty{color:var(--sub);font-size:13px;text-align:center;padding:18px 0}
 .filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.filters>*{flex:1;min-width:120px}
@@ -376,7 +376,7 @@ function renderSaved(){
     if(fp&&r.name!==fp)return;
     if(qf&&(''+r.name+' '+r.kw+' '+(r.title||'')+' '+r.ps+' '+r.med).toLowerCase().indexOf(qf)<0)return;
     shown++;
-    body+='<tr><td class="nw">'+esc(fmtTs(r.ts))+'</td><td class="prod" title="'+esca(r.name)+'">'+esc(r.name)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod"><input class="tedit" data-tid="'+esca(r.id||'')+'" value="'+esca(r.title||'')+'" placeholder="제목 입력" autocomplete="off"></td><td class="nw">'+esc(r.medLabel||medLabel(r.med))+'</td><td class="nw">'+pxLabel(r.slug)+'</td>'+
+    body+='<tr><td class="nw">'+esc(fmtTs(r.ts))+'</td><td class="prod" title="'+esca(r.name)+'">'+esc(r.name)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod tt" title="'+esca(r.title||'')+'">'+(r.title?esc(r.title):'<span class="muted">—</span>')+'</td><td class="nw">'+esc(r.medLabel||medLabel(r.med))+'</td><td class="nw">'+pxLabel(r.slug)+'</td>'+
       '<td><span class="acts"><button class="btn mini" data-copy="'+i+'">복사</button><button class="btn mini" data-openi="'+i+'">열기</button><button class="btn mini" data-editl="'+i+'">수정</button><button class="btn mini" data-del="'+i+'">삭제</button></span></td></tr>';
   });
   $('cnt').textContent='('+((qf||fm||fp)?shown+'/'+all.length:all.length)+')';
