@@ -149,6 +149,7 @@ var $=function(i){return document.getElementById(i)};
 var PXKEYS=null;    // 픽셀샵 제품맵
 var SHARED=null;    // 공유 제품목록(GAS)
 var REMOTE=null;    // 공유 저장링크(GAS). null=공유불가→로컬폴백
+var SAVED_LOADING=false;   // 공유 저장링크 로딩중(재시도 포함) — 빈 메시지 대신 '불러오는 중'
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function esca(s){return esc(s).replace(/"/g,'&quot;')}  // 속성값 안전(따옴표까지)
@@ -160,9 +161,11 @@ function hash(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}
 function migId(r){return 'm'+hash((r.ts||'')+'|'+(r.ps||'')+'|'+(r.kw||''));}
 function newId(){return 's'+(Date.now()).toString(36)+Math.floor(Math.random()*1e7).toString(36);}
 
-function jsonp(url,cb){var nm='__lbcb'+(jsonp._n=(jsonp._n||0)+1);var s=document.createElement('script');
-  window[nm]=function(d){cb(d);try{delete window[nm]}catch(e){window[nm]=undefined}s.parentNode&&s.parentNode.removeChild(s)};
-  s.onerror=function(){cb(null);s.parentNode&&s.parentNode.removeChild(s)};
+function jsonp(url,cb,timeoutMs){var nm='__lbcb'+(jsonp._n=(jsonp._n||0)+1);var s=document.createElement('script');var done=false;
+  var fin=function(d){if(done)return;done=true;clearTimeout(to);try{delete window[nm]}catch(e){window[nm]=undefined}s.parentNode&&s.parentNode.removeChild(s);cb(d);};
+  var to=setTimeout(function(){fin(null)},timeoutMs||15000);   // GAS 콜드스타트 대비 15초
+  window[nm]=function(d){fin(d)};
+  s.onerror=function(){fin(null)};
   s.src=url+(url.indexOf('?')>=0?'&':'?')+'callback='+nm;document.head.appendChild(s);}
 
 function loadShared(){
@@ -194,10 +197,13 @@ function postUpdateTitle(id,title){
   var loc=load(),ch=false;loc.forEach(function(x){if((x.id||'')===id){x.title=title;ch=true;}});if(ch)store(loc);
   TITLEMAP=null;}
 
-function loadSavedRemote(){
+function loadSavedRemote(attempt){
+  attempt=attempt||1; SAVED_LOADING=true;
+  $('sync').textContent = attempt>1 ? ('☁ 불러오는 중… (재시도 '+attempt+'/5)') : '☁ 불러오는 중…';
   jsonp(GAS_URL+'?what=saved',function(d){
-    if(d&&d.ok&&d.saved){REMOTE=d.saved;$('sync').textContent='☁ 공유 저장 '+d.saved.length+'개 (모두와 공유됨)';migrateLocal();renderSaved();}
-    else{REMOTE=null;$('sync').textContent='⚠ 공유 연결 안됨 — 이 브라우저 저장만 표시(잠시 후 자동 재시도)';renderSaved();}
+    if(d&&d.ok&&d.saved){SAVED_LOADING=false;REMOTE=d.saved;$('sync').textContent='☁ 공유 저장 '+d.saved.length+'개 (모두와 공유됨)';migrateLocal();renderSaved();return;}
+    if(attempt<5){setTimeout(function(){loadSavedRemote(attempt+1)}, 1200*attempt); renderSaved(); return;}  // 점증 재시도(콜드스타트)
+    SAVED_LOADING=false;REMOTE=null;$('sync').textContent='⚠ 공유 연결 실패 — 새로고침(Ctrl+F5) 해주세요';renderSaved();
   });}
 function migrateLocal(){
   if(REMOTE===null)return; var loc=load(); if(!loc.length)return;
@@ -311,7 +317,11 @@ function renderSaved(){
   var qf=($('qs')?$('qs').value:'').trim().toLowerCase();
   var fm=$('fmed')?$('fmed').value:'';var fp=$('fprod')?$('fprod').value:'';
   var w=$('savedwrap');
-  if(!all.length){$('cnt').textContent='';w.innerHTML='<div class="empty">아직 저장한 링크가 없어요. \'＋ 링크 만들기\' 탭에서 만들고 <b>＋ 이 링크 저장</b>을 누르세요.</div>';return;}
+  if(!all.length){$('cnt').textContent='';
+    w.innerHTML=(SAVED_LOADING&&REMOTE===null)
+      ?'<div class="empty">☁ 공유 저장링크 불러오는 중…<br><span style="font-size:12px;color:var(--sub)">(GAS가 잠들어 있으면 몇 초 걸려요)</span></div>'
+      :'<div class="empty">아직 저장한 링크가 없어요. \'＋ 링크 만들기\' 탭에서 만들고 <b>＋ 이 링크 저장</b>을 누르세요.</div>';
+    return;}
   var body='',shown=0;
   all.forEach(function(r,i){
     if(fm&&r.med!==fm)return;
@@ -378,7 +388,7 @@ function renderSales(){
 function switchTab(name){
   ['build','saved','sales'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
   Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){b.classList.toggle('active',b.dataset.tab===name)});
-  if(name==='saved')renderSaved();
+  if(name==='saved'){ if(REMOTE===null&&!SAVED_LOADING) loadSavedRemote(); else renderSaved(); }
   if(name==='sales')loadSales();}
 
 document.addEventListener('click',function(e){
