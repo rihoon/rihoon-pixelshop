@@ -101,7 +101,8 @@ details.add summary::-webkit-details-marker{display:none}
     <div class="k"><span>원본 파라미터 URL (마케팅링크 직행)</span><button class="btn" data-t="raw">복사</button></div>
     <div class="v" id="raw"></div>
   </div>
-  <div class="save-row"><button class="btn solid" id="save">＋ 이 링크 저장</button></div>
+  <div class="save-row"><button class="btn solid" id="save">＋ 이 링크 저장</button><button class="btn" id="cancelEdit" style="display:none">수정 취소</button></div>
+  <div class="hint" id="editHint" style="display:none"></div>
 </div>
 </div><!-- /tab-build -->
 
@@ -302,12 +303,41 @@ function addProduct(){
    },1400);})
    .catch(function(){$('c_hint').textContent='⚠️ 등록 실패(네트워크) — 다시 시도해주세요.';});}
 
+var EDITING_ID=null;
+function startEdit(it){
+  if(!it)return; EDITING_ID=it.id;
+  switchTab('build');
+  $('q').value=''; renderProducts('');
+  $('prod').value=it.slug;
+  $('src').value=it.src||'facebook'; $('med').value=it.med||''; $('kw').value=it.kw||''; $('kwt').value=it.title||'';
+  gen();
+  $('save').textContent='✎ 수정 저장'; $('cancelEdit').style.display='';
+  $('editHint').style.display=''; $('editHint').textContent='✎ 기존 링크 수정 중 — 값을 바꾼 뒤 「수정 저장」. (소재번호 바꾸면 URL도 새로 생성됨)';
+  try{document.querySelector('.card').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}
+}
+function cancelEdit(){
+  EDITING_ID=null; $('save').textContent='＋ 이 링크 저장'; $('cancelEdit').style.display='none'; $('editHint').style.display='none';
+}
+function postUpdateLink(entry){
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({token:GAS_TOKEN,type:'updatelink',id:entry.id,item:entry})}).catch(function(){});}
 function saveCur(){
   var p=curProd();if(!p||!p.slug)return;
   var kw=$('kw').value.trim();var kwt=$('kwt').value.trim();var src=$('src').value;var med=$('med').value;var qs=mkqs(p.slug,src,med,kw);
+  var ps=psURL(p,src,med,kw), raw=(p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'');
+  if(EDITING_ID){   // ── 기존 링크 수정 ──
+    var eid=EDITING_ID;
+    function patch(x){if(x&&x.id===eid){x.name=p.name;x.slug=p.slug;x.src=src;x.med=med;x.medLabel=medLabel(med);x.kw=kw;x.title=kwt;x.ps=ps;x.raw=raw;}}
+    if(REMOTE!==null)REMOTE.forEach(patch);
+    var loc0=load();loc0.forEach(patch);store(loc0);
+    var upd=(REMOTE!==null?REMOTE:loc0).filter(function(x){return x.id===eid})[0];
+    if(upd)postUpdateLink(upd);
+    cancelEdit(); if(REMOTE!==null)cacheRemote(REMOTE); renderSaved();
+    var bb=$('save');bb.textContent='수정됨 ✓';bb.classList.add('done');setTimeout(function(){bb.textContent='＋ 이 링크 저장';bb.classList.remove('done')},1200);
+    return;
+  }
   var now=new Date();var ts=(now.getMonth()+1)+'/'+now.getDate()+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
-  var entry={id:newId(),ts:ts,name:p.name,slug:p.slug,src:src,med:med,medLabel:medLabel(med),kw:kw,title:kwt,
-             ps:psURL(p,src,med,kw),raw:(p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'')};
+  var entry={id:newId(),ts:ts,name:p.name,slug:p.slug,src:src,med:med,medLabel:medLabel(med),kw:kw,title:kwt,ps:ps,raw:raw};
   var loc=load();loc.unshift(entry);store(loc);              // 로컬 백업(안 날아감)
   if(REMOTE!==null){REMOTE.push(entry);postSaveBatch([entry]);}  // 공유 반영
   renderSaved();
@@ -346,7 +376,7 @@ function renderSaved(){
     if(qf&&(''+r.name+' '+r.kw+' '+(r.title||'')+' '+r.ps+' '+r.med).toLowerCase().indexOf(qf)<0)return;
     shown++;
     body+='<tr><td class="nw">'+esc(fmtTs(r.ts))+'</td><td class="prod" title="'+esca(r.name)+'">'+esc(r.name)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod"><input class="tedit" data-tid="'+esca(r.id||'')+'" value="'+esca(r.title||'')+'" placeholder="제목 입력" autocomplete="off"></td><td class="nw">'+esc(r.medLabel||medLabel(r.med))+'</td><td class="nw">'+pxLabel(r.slug)+'</td>'+
-      '<td><span class="acts"><button class="btn mini" data-copy="'+i+'">복사</button><button class="btn mini" data-openi="'+i+'">열기</button><button class="btn mini" data-del="'+i+'">삭제</button></span></td></tr>';
+      '<td><span class="acts"><button class="btn mini" data-copy="'+i+'">복사</button><button class="btn mini" data-openi="'+i+'">열기</button><button class="btn mini" data-editl="'+i+'">수정</button><button class="btn mini" data-del="'+i+'">삭제</button></span></td></tr>';
   });
   $('cnt').textContent='('+((qf||fm||fp)?shown+'/'+all.length:all.length)+')';
   w.innerHTML=shown?('<table><thead><tr><th>시각</th><th>제품</th><th>소재</th><th>제목</th><th>담당자</th><th>픽셀샵</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table>'):'<div class="empty">조건에 맞는 링크가 없어요.</div>';}
@@ -418,6 +448,7 @@ document.addEventListener('click',function(e){
   if(t.dataset.open){var u=$(t.dataset.open).textContent;if(u)window.open(u,'_blank');return;}
   if(t.dataset.copy!=null){var r=effSaved()[+t.dataset.copy];if(r)navigator.clipboard.writeText(r.ps).then(function(){t.textContent='✓';setTimeout(function(){t.textContent='복사'},900)});return;}
   if(t.dataset.openi!=null){var ro=effSaved()[+t.dataset.openi];if(ro&&ro.ps)window.open(ro.ps,'_blank');return;}
+  if(t.dataset.editl!=null){startEdit(effSaved()[+t.dataset.editl]);return;}
   if(t.dataset.del!=null){var it=effSaved()[+t.dataset.del];if(!it)return;if(!confirm('이 저장 링크를 삭제할까요? (공유목록에서도 삭제됩니다)'))return;
     var kid=it.id||migId(it);
     store(load().filter(function(x){return (x.id||migId(x))!==kid}));
@@ -433,6 +464,7 @@ document.addEventListener('change',function(e){
   }});
 $('c_add').addEventListener('click',addProduct);
 $('save').addEventListener('click',saveCur);
+$('cancelEdit').addEventListener('click',cancelEdit);
 $('dl').addEventListener('click',downloadCSV);
 $('clr').addEventListener('click',function(){
   if(REMOTE!==null){alert('공유 모드에선 안전을 위해 전체삭제를 막았어요. 각 줄의 삭제 버튼을 쓰세요.');return;}
