@@ -197,14 +197,26 @@ function postUpdateTitle(id,title){
   var loc=load(),ch=false;loc.forEach(function(x){if((x.id||'')===id){x.title=title;ch=true;}});if(ch)store(loc);
   TITLEMAP=null;}
 
+// 저장링크를 GAS(콜드스타트 느림) 대신 gviz(시트 직접 읽기, 콜드스타트 없음)로 로드. — 2026-07-08 속도개선
+var RCACHE='rihoon_lb_remote_cache';
+// 저장링크 열 고정순서: id,저장시각,제품,슬러그,nt_source,nt_medium,담당자,소재번호,픽셀샵URL,원본URL,소재제목
+function _S(v){return v==null?'':String(v);}
+function mapSavedRow(r){var c=(r&&r.c)||[];function g(i){var x=c[i];return x?(x.f!=null?x.f:x.v):'';}
+  return {id:_S(g(0)),ts:_S(g(1)),name:_S(g(2)),slug:_S(g(3)),src:_S(g(4)),med:_S(g(5)),medLabel:_S(g(6)),kw:_S(g(7)),ps:_S(g(8)),raw:_S(g(9)),title:_S(g(10))};}
+function cacheRemote(a){try{localStorage.setItem(RCACHE,JSON.stringify(a||[]))}catch(e){}}
+function loadCachedRemote(){try{var a=JSON.parse(localStorage.getItem(RCACHE)||'null');if(a&&a.length){REMOTE=a;return true;}}catch(e){}return false;}
 function loadSavedRemote(attempt){
   attempt=attempt||1; SAVED_LOADING=true;
-  $('sync').textContent = attempt>1 ? ('☁ 불러오는 중… (재시도 '+attempt+'/5)') : '☁ 불러오는 중…';
-  jsonp(GAS_URL+'?what=saved',function(d){
-    if(d&&d.ok&&d.saved){SAVED_LOADING=false;REMOTE=d.saved;$('sync').textContent='☁ 공유 저장 '+d.saved.length+'개 (모두와 공유됨)';migrateLocal();renderSaved();return;}
-    if(attempt<5){setTimeout(function(){loadSavedRemote(attempt+1)}, 1200*attempt); renderSaved(); return;}  // 점증 재시도(콜드스타트)
-    SAVED_LOADING=false;REMOTE=null;$('sync').textContent='⚠ 공유 연결 실패 — 새로고침(Ctrl+F5) 해주세요';renderSaved();
-  });}
+  if(REMOTE===null) $('sync').textContent = attempt>1 ? ('☁ 불러오는 중… (재시도 '+attempt+'/4)') : '☁ 불러오는 중…';
+  gviz('저장링크',function(d){
+    if(d&&d.status==='ok'&&d.table){
+      var arr=(d.table.rows||[]).map(mapSavedRow).filter(function(o){return o.id&&o.id!=='id';});
+      SAVED_LOADING=false; REMOTE=arr; cacheRemote(arr);
+      $('sync').textContent='☁ 공유 저장 '+arr.length+'개 (모두와 공유됨)'; migrateLocal(); renderSaved(); return;
+    }
+    if(attempt<4){setTimeout(function(){loadSavedRemote(attempt+1)}, 900*attempt); renderSaved(); return;}
+    SAVED_LOADING=false; if(REMOTE===null){$('sync').textContent='⚠ 불러오기 실패 — 새로고침(Ctrl+F5)';} renderSaved();
+  }, 12000);}
 function migrateLocal(){
   if(REMOTE===null)return; var loc=load(); if(!loc.length)return;
   var byId={};REMOTE.forEach(function(r){byId[r.id]=r;});
@@ -312,6 +324,7 @@ function fillSavedFilters(all){
 function renderSaved(){
   var all=effSaved();
   TITLEMAP=null;   // 저장링크 변경 시 소재별매출 제목맵 무효화(다음 렌더 때 재구성)
+  if(REMOTE!==null)cacheRemote(REMOTE);   // 세션 변경분까지 캐시 최신화(다음 로드 즉시표시)
   if($('tabcnt'))$('tabcnt').textContent=all.length?('('+all.length+')'):'';
   fillSavedFilters(all);
   var qf=($('qs')?$('qs').value:'').trim().toLowerCase();
@@ -345,10 +358,12 @@ function downloadCSV(){
 
 // ── 소재별 매출 탭 (시트 '소재별매출_자체'를 gviz로 직접 읽음 — 저장은 시트, 화면은 여기) ──
 var SALES=null;
-function gviz(sheet,cb){var nm='__gv'+(gviz._n=(gviz._n||0)+1);var s=document.createElement('script');
-  window[nm]=function(d){cb(d);try{delete window[nm]}catch(e){}s.parentNode&&s.parentNode.removeChild(s)};
-  s.onerror=function(){cb(null);s.parentNode&&s.parentNode.removeChild(s)};
-  s.src='https://docs.google.com/spreadsheets/d/'+encodeURIComponent('18qoZFuwFPls5_ThDl1P9GFQ2gKn2kHe2zB3_9W1uk9c')+'/gviz/tq?sheet='+encodeURIComponent(sheet)+'&tqx=responseHandler:'+nm;
+function gviz(sheet,cb,timeoutMs){var nm='__gv'+(gviz._n=(gviz._n||0)+1);var s=document.createElement('script');var done=false;
+  var fin=function(d){if(done)return;done=true;clearTimeout(to);try{delete window[nm]}catch(e){}s.parentNode&&s.parentNode.removeChild(s);cb(d);};
+  var to=setTimeout(function(){fin(null)},timeoutMs||12000);
+  window[nm]=function(d){fin(d)};
+  s.onerror=function(){fin(null)};
+  s.src='https://docs.google.com/spreadsheets/d/'+encodeURIComponent('18qoZFuwFPls5_ThDl1P9GFQ2gKn2kHe2zB3_9W1uk9c')+'/gviz/tq?sheet='+encodeURIComponent(sheet)+'&tqx=responseHandler:'+nm+'&_='+Date.now();
   document.head.appendChild(s);}
 function slugName(sl){var p=allProducts().filter(function(x){return x.slug===sl})[0];return p?p.name:sl;}
 // 소재 제목: 저장링크(공유+로컬)에서 제품(slug)+소재번호(kw)가 같은 항목의 title을 찾아 붙인다.
@@ -425,5 +440,7 @@ $('sreload').addEventListener('click',function(){loadSales(true)});
 $('qs').addEventListener('input',renderSaved);
 $('fmed').addEventListener('change',function(){localStorage.setItem(MEKEY,this.value);renderSaved()});
 $('fprod').addEventListener('change',renderSaved);
-fillMedia();renderProducts('');renderSaved();loadShared();loadPixelshop();loadSavedRemote();
+fillMedia();renderProducts('');
+loadCachedRemote();   // 지난번 목록을 즉시 표시(콜드스타트 대기 없이)
+renderSaved();loadShared();loadPixelshop();loadSavedRemote();  // gviz로 백그라운드 최신화
 </script></body></html>
