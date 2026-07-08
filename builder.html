@@ -63,6 +63,7 @@ details.add summary::-webkit-details-marker{display:none}
 <div class="tabs">
   <button class="tab active" data-tab="build">＋ 링크 만들기</button>
   <button class="tab" data-tab="saved">저장한 링크 <span id="tabcnt"></span></button>
+  <button class="tab" data-tab="admin">➕ 등록</button>
 </div>
 
 <div id="tab-build">
@@ -71,15 +72,7 @@ details.add summary::-webkit-details-marker{display:none}
   <input id="q" placeholder="제품 검색(예: 이야기, 오늘기억)" autocomplete="off">
   <select id="prod" style="margin-top:8px"></select>
   <div id="plink" class="hint"></div>
-
-  <details class="add">
-    <summary>＋ 새 제품 등록 (시트에 저장·전원 공유)</summary>
-    <label>제품명</label><input id="c_name" placeholder="예: 2027 이야기 다이어리" autocomplete="off">
-    <label>슬러그(nt_detail·영문소문자/숫자/_)</label><input id="c_slug" placeholder="예: story_diary_27" autocomplete="off">
-    <label>마케팅링크(네이버)</label><input id="c_link" placeholder="https://mkt.shopping.naver.com/link/..." autocomplete="off">
-    <div class="save-row"><button class="btn solid" id="c_add">＋ 등록</button></div>
-    <div class="hint" id="c_hint">등록하면 시트에 저장돼 모든 사람 웹앱에 바로 뜹니다.</div>
-  </details>
+  <div class="hint" style="margin-top:6px">제품·매체·담당자가 목록에 없으면 상단 <b>➕ 등록</b> 탭에서 추가하세요.</div>
 
   <div class="row">
     <div><label>매체(nt_source)</label><select id="src"></select></div>
@@ -123,6 +116,33 @@ details.add summary::-webkit-details-marker{display:none}
 </div>
 </div><!-- /tab-saved -->
 
+<div id="tab-admin" style="display:none">
+  <div class="card">
+    <h2>새 제품 등록 <span class="pxbadge">nt_detail</span></h2>
+    <label>제품명</label><input id="c_name" placeholder="예: 2027 이야기 다이어리" autocomplete="off">
+    <label>슬러그(nt_detail · 영문소문자·숫자·_)</label><input id="c_slug" placeholder="예: story_diary_27" autocomplete="off">
+    <label>마케팅링크(네이버)</label><input id="c_link" placeholder="https://mkt.shopping.naver.com/link/..." autocomplete="off">
+    <div class="save-row"><button class="btn solid" id="c_add">＋ 제품 등록</button></div>
+    <div class="hint" id="c_hint">등록하면 시트에 저장돼 모두에게 바로 공유됩니다.</div>
+  </div>
+  <div class="card">
+    <h2>매체 등록 <span class="pxbadge">nt_source</span></h2>
+    <label>매체 이름</label><input id="s_label" placeholder="예: 카카오" autocomplete="off">
+    <label>코드(nt_source · 영문소문자·숫자·_)</label><input id="s_code" placeholder="예: kakao" autocomplete="off">
+    <div class="save-row"><button class="btn solid" id="s_add">＋ 매체 등록</button></div>
+    <div class="hint" id="s_hint"></div>
+    <div class="hint" id="s_list" style="margin-top:4px"></div>
+  </div>
+  <div class="card">
+    <h2>담당자 등록 <span class="pxbadge">nt_medium</span></h2>
+    <label>담당자 이름</label><input id="m_label" placeholder="예: 지수" autocomplete="off">
+    <label>코드(nt_medium · traffic_X 형식 권장)</label><input id="m_code" placeholder="예: traffic_j" autocomplete="off">
+    <div class="save-row"><button class="btn solid" id="m_add">＋ 담당자 등록</button></div>
+    <div class="hint" id="m_hint"></div>
+    <div class="hint" id="m_list" style="margin-top:4px"></div>
+  </div>
+</div><!-- /tab-admin -->
+
 <p class="foot">제품·저장링크: 링크빌더 시트(Apps Script 실시간 공유) · 기존 브라우저 저장분은 자동 병합<br>리훈 메타광고 자동화</p>
 </div>
 <script>
@@ -156,10 +176,13 @@ function jsonp(url,cb,timeoutMs){var nm='__lbcb'+(jsonp._n=(jsonp._n||0)+1);var 
   s.onerror=function(){fin(null)};
   s.src=url+(url.indexOf('?')>=0?'&':'?')+'callback='+nm;document.head.appendChild(s);}
 
+function mergeKV(arr,extra){if(!extra||!extra.length)return false;var have={};arr.forEach(function(x){have[x.code]=1});var ch=false;
+  extra.forEach(function(x){if(x&&x.code&&!have[x.code]){arr.push({code:x.code,label:x.label||x.code});have[x.code]=1;ch=true;}});return ch;}
 function loadShared(){
   jsonp(GAS_URL,function(d){
     if(d&&d.ok&&d.products&&d.products.length){SHARED=d.products;$('pcount').textContent='· 공유 '+d.products.length+'개';renderProducts($('q').value);}
     else{$('pcount').textContent='· (오프라인: 임베드 '+PRODUCTS.length+'개)';}
+    if(d&&d.ok){var c1=mergeKV(SOURCES,d.sources),c2=mergeKV(MEDIA,d.mediums);if(c1||c2)fillMedia();fillAdminHints();}
   });}
 
 function loadPixelshop(){
@@ -235,9 +258,31 @@ function pxLabel(slug){if(PXKEYS===null)return '<span class="pxbadge">…</span>
   return PXKEYS[slug]?'<span class="pxbadge">✅ 등록</span>':'<span class="pxbadge">🆕 즉시</span>';}
 
 function fillMedia(){
+  var cs=$('src').value,cm=$('med').value;   // 재채움 시 선택값 보존
+  $('src').innerHTML='';$('med').innerHTML='';
   SOURCES.forEach(function(s){var o=document.createElement('option');o.value=s.code;o.textContent=s.label+' ('+s.code+')';$('src').appendChild(o)});
   MEDIA.forEach(function(m){var o=document.createElement('option');o.value=m.code;o.textContent=m.label+' ('+m.code+')';$('med').appendChild(o)});
-  var h=MEDIA.filter(function(m){return m.code==='traffic_h'});if(h.length)$('med').value='traffic_h';}
+  $('src').value=cs||'facebook';
+  if(cm)$('med').value=cm; else{var h=MEDIA.filter(function(m){return m.code==='traffic_h'});if(h.length)$('med').value='traffic_h';}}
+// ── 등록: 매체·담당자 ──
+function okCode(c){return /^[a-z0-9_]+$/.test(c);}
+function fillAdminHints(){
+  if($('s_list'))$('s_list').innerHTML='현재 매체: '+SOURCES.map(function(x){return esc(x.label)+'('+esc(x.code)+')'}).join(', ');
+  if($('m_list'))$('m_list').innerHTML='현재 담당자: '+MEDIA.map(function(x){return esc(x.label)+'('+esc(x.code)+')'}).join(', ');}
+function addKV(kind){   // kind: 'source' | 'medium'
+  var isS=(kind==='source');var lab=$(isS?'s_label':'m_label').value.trim();var code=$(isS?'s_code':'m_code').value.trim().toLowerCase();
+  var hint=$(isS?'s_hint':'m_hint');var arr=isS?SOURCES:MEDIA;
+  if(!lab){alert((isS?'매체':'담당자')+' 이름을 입력하세요.');return;}
+  if(!okCode(code)){alert('코드는 영문소문자·숫자·_ 만 가능해요'+(isS?' (예: kakao)':' (예: traffic_j)'));return;}
+  if(arr.some(function(x){return x.code===code})){alert('이미 있는 코드예요.');return;}
+  hint.textContent='등록 중…';
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({token:GAS_TOKEN,type:isS?'addsource':'addmedium',code:code,label:lab})})
+   .then(function(){
+      arr.push({code:code,label:lab});fillMedia();fillAdminHints();
+      $(isS?'s_label':'m_label').value='';$(isS?'s_code':'m_code').value='';
+      hint.textContent='✓ 등록 완료 — 링크 만들기 목록에 바로 추가됐어요.';
+   }).catch(function(){hint.textContent='⚠️ 등록 실패(네트워크) — 다시 시도해주세요.';});}
 
 function renderProducts(filter){
   var sel=$('prod');var prev=sel.value;sel.innerHTML='';var f=(filter||'').trim().toLowerCase();var list=allProducts();
@@ -382,9 +427,10 @@ function gviz(sheet,cb,timeoutMs){var nm='__gv'+(gviz._n=(gviz._n||0)+1);var s=d
   s.src='https://docs.google.com/spreadsheets/d/'+encodeURIComponent('18qoZFuwFPls5_ThDl1P9GFQ2gKn2kHe2zB3_9W1uk9c')+'/gviz/tq?sheet='+encodeURIComponent(sheet)+'&tqx=responseHandler:'+nm+'&_='+Date.now();
   document.head.appendChild(s);}
 function switchTab(name){
-  ['build','saved'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
+  ['build','saved','admin'].forEach(function(n){var el=$('tab-'+n);if(el)el.style.display=(n===name)?'':'none';});
   Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(b){b.classList.toggle('active',b.dataset.tab===name)});
-  if(name==='saved'){ if(REMOTE===null&&!SAVED_LOADING) loadSavedRemote(); else renderSaved(); }}
+  if(name==='saved'){ if(REMOTE===null&&!SAVED_LOADING) loadSavedRemote(); else renderSaved(); }
+  if(name==='admin')fillAdminHints();}
 
 document.addEventListener('click',function(e){
   var t=e.target;
@@ -409,6 +455,8 @@ document.addEventListener('change',function(e){
     t.style.background='#e8f5e9';setTimeout(function(){t.style.background=''},700);
   }});
 $('c_add').addEventListener('click',addProduct);
+$('s_add').addEventListener('click',function(){addKV('source')});
+$('m_add').addEventListener('click',function(){addKV('medium')});
 $('save').addEventListener('click',saveCur);
 $('cancelEdit').addEventListener('click',cancelEdit);
 $('dl').addEventListener('click',downloadCSV);
@@ -420,7 +468,7 @@ $('q').addEventListener('input',function(){renderProducts(this.value)});
 $('qs').addEventListener('input',renderSaved);
 $('fmed').addEventListener('change',function(){localStorage.setItem(MEKEY,this.value);renderSaved()});
 $('fprod').addEventListener('change',renderSaved);
-fillMedia();renderProducts('');
+fillMedia();renderProducts('');fillAdminHints();
 loadCachedRemote();   // 지난번 목록을 즉시 표시(콜드스타트 대기 없이)
 renderSaved();loadShared();loadPixelshop();loadSavedRemote();  // gviz로 백그라운드 최신화
 </script></body></html>
