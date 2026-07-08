@@ -288,11 +288,10 @@ function pxLabel(slug){if(PXKEYS===null)return '<span class="pxbadge">…</span>
 
 function fillMedia(){
   var cs=$('src').value,cm=$('med').value;   // 재채움 시 선택값 보존
-  $('src').innerHTML='';$('med').innerHTML='';
+  $('src').innerHTML='<option value="">— 매체 선택 —</option>';$('med').innerHTML='<option value="">— 담당자 선택 —</option>';
   SOURCES.forEach(function(s){var o=document.createElement('option');o.value=s.code;o.textContent=s.label+' ('+s.code+')';$('src').appendChild(o)});
   MEDIA.forEach(function(m){var o=document.createElement('option');o.value=m.code;o.textContent=m.label+' ('+m.code+')';$('med').appendChild(o)});
-  $('src').value=cs||'facebook';
-  if(cm)$('med').value=cm; else{var h=MEDIA.filter(function(m){return m.code==='traffic_h'});if(h.length)$('med').value='traffic_h';}}
+  $('src').value=cs||'';$('med').value=cm||'';}   // 기본 선택 없음 — 직원이 직접 고르게
 // ── 등록/수정/삭제: 매체·담당자·제품 ──
 function okCode(c){return /^[a-z0-9_]+$/.test(c);}
 function kvRow(name,code,dk){   // dk: 'src'|'med'|'prod'
@@ -371,6 +370,7 @@ function gen(){
   var p=curProd();var kw=$('kw').value.trim();var src=$('src').value;var med=$('med').value;var b=$('pxbadge');
   $('plink').textContent=p&&p.link?('마케팅링크: '+p.link):'⚠️ 이 제품은 마케팅링크가 없어요(출시예정/품절)';
   if(!p||!p.slug){$('ps').textContent='';$('raw').textContent='';if(b)b.textContent='';return;}
+  if(!src||!med){$('ps').textContent='⚠️ 매체·담당자를 먼저 선택하세요';$('raw').textContent='';if(b)b.textContent='';return;}
   $('ps').textContent=psURL(p,src,med,kw);
   var qs=mkqs(p.slug,src,med,kw);
   $('raw').textContent=p.link?(p.link+(p.link.indexOf('?')>=0?'&':'?')+qs):'(마케팅링크 없음)';
