@@ -284,6 +284,7 @@ function fillSavedFilters(all){
 
 function renderSaved(){
   var all=effSaved();
+  TITLEMAP=null;   // 저장링크 변경 시 소재별매출 제목맵 무효화(다음 렌더 때 재구성)
   if($('tabcnt'))$('tabcnt').textContent=all.length?('('+all.length+')'):'';
   fillSavedFilters(all);
   var qf=($('qs')?$('qs').value:'').trim().toLowerCase();
@@ -319,6 +320,12 @@ function gviz(sheet,cb){var nm='__gv'+(gviz._n=(gviz._n||0)+1);var s=document.cr
   s.src='https://docs.google.com/spreadsheets/d/'+encodeURIComponent('18qoZFuwFPls5_ThDl1P9GFQ2gKn2kHe2zB3_9W1uk9c')+'/gviz/tq?sheet='+encodeURIComponent(sheet)+'&tqx=responseHandler:'+nm;
   document.head.appendChild(s);}
 function slugName(sl){var p=allProducts().filter(function(x){return x.slug===sl})[0];return p?p.name:sl;}
+// 소재 제목: 저장링크(공유+로컬)에서 제품(slug)+소재번호(kw)가 같은 항목의 title을 찾아 붙인다.
+var TITLEMAP=null;
+function buildTitleMap(){TITLEMAP={};effSaved().forEach(function(r){
+  var k=(r.slug||'')+'|'+String(r.kw||'').trim();
+  if((r.title||'').trim()&&!TITLEMAP[k])TITLEMAP[k]=r.title.trim();});}
+function titleFor(slug,kw){if(TITLEMAP===null)buildTitleMap();return TITLEMAP[(slug||'')+'|'+String(kw||'').trim()]||'';}
 function loadSales(force){
   if(SALES&&!force){renderSales();return;}
   $('salesinfo').textContent='불러오는 중…';
@@ -338,13 +345,13 @@ function renderSales(){
   var qf=($('sq').value||'').trim().toLowerCase();var fp=$('sfprod').value;
   var body='',n=0,ta=0,tn=0;
   a.forEach(function(r){
-    var nm=slugName(r.slug);
+    var nm=slugName(r.slug);var tt=titleFor(r.slug,r.kw);
     if(fp&&nm!==fp)return;
-    if(qf&&(r.d+' '+nm+' '+r.slug+' '+r.kw).toLowerCase().indexOf(qf)<0)return;
+    if(qf&&(r.d+' '+nm+' '+r.slug+' '+r.kw+' '+tt).toLowerCase().indexOf(qf)<0)return;
     n++;ta+=r.amt;tn+=r.n;
-    body+='<tr><td class="nw">'+esc(r.d)+'</td><td class="prod">'+esc(nm)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="nw">'+r.n+'</td><td class="nw">₩'+r.amt.toLocaleString()+'</td></tr>';});
+    body+='<tr><td class="nw">'+esc(r.d)+'</td><td class="prod">'+esc(nm)+'</td><td class="nw">'+esc(r.kw)+'</td><td class="prod">'+esc(tt)+'</td><td class="nw">'+r.n+'</td><td class="nw">₩'+r.amt.toLocaleString()+'</td></tr>';});
   $('scnt').textContent=n?('('+n+'행 · '+tn+'건 · ₩'+ta.toLocaleString()+')'):'';
-  w.innerHTML=n?('<table><thead><tr><th>결제일</th><th>제품</th><th>소재</th><th>건수</th><th>매출</th></tr></thead><tbody>'+body+'</tbody></table>')
+  w.innerHTML=n?('<table><thead><tr><th>결제일</th><th>제품</th><th>소재</th><th>제목</th><th>건수</th><th>매출</th></tr></thead><tbody>'+body+'</tbody></table>')
     :'<div class="empty">아직 데이터가 없어요. 픽셀샵 링크를 단 소재에서 구매가 나오면 매일 아침 쌓입니다.</div>';}
 
 function switchTab(name){
