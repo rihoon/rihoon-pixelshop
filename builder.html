@@ -48,7 +48,13 @@ td .u{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;col
 #savedwrap .acts{display:flex;gap:4px}
 #savedwrap td.tt{font-weight:600;color:var(--ink)}
 #savedwrap .muted{color:#c4c4c4;font-weight:400}
-.reglist{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+details.regbox{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+details.regbox>summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--sub);list-style:none;padding:2px 0}
+details.regbox>summary::-webkit-details-marker{display:none}
+details.regbox>summary::before{content:'▸ '}
+details.regbox[open]>summary::before{content:'▾ '}
+.rcnt{color:var(--sub);font-weight:400}
+.reglist{margin-top:4px}
 .reglist .ltitle{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px}
 .reglist .muted{color:#c4c4c4;font-size:12px}
 .reglist .lrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0}
@@ -131,8 +137,10 @@ details.add summary::-webkit-details-marker{display:none}
     <label>마케팅링크(네이버)</label><input id="c_link" placeholder="https://mkt.shopping.naver.com/link/..." autocomplete="off">
     <div class="save-row"><button class="btn solid" id="c_add">＋ 제품 등록</button></div>
     <div class="hint" id="c_hint">등록하면 시트에 저장돼 모두에게 바로 공유됩니다.</div>
-    <input id="p_search" placeholder="🔍 수정/삭제할 제품 검색" autocomplete="off" style="margin-top:12px">
-    <div class="reglist" id="p_list"></div>
+    <details class="regbox"><summary>📋 제품 목록 <span class="rcnt" id="p_cnt"></span> · 수정/삭제</summary>
+      <input id="p_search" placeholder="🔍 제품 검색" autocomplete="off" style="margin:8px 0">
+      <div class="reglist" id="p_list"></div>
+    </details>
   </div>
   <div class="card">
     <h2>매체 등록 <span class="pxbadge">nt_source</span></h2>
@@ -140,7 +148,8 @@ details.add summary::-webkit-details-marker{display:none}
     <label>코드(nt_source · 영문소문자·숫자·_)</label><input id="s_code" placeholder="예: kakao" autocomplete="off">
     <div class="save-row"><button class="btn solid" id="s_add">＋ 매체 등록</button></div>
     <div class="hint" id="s_hint"></div>
-    <div class="reglist" id="s_list"></div>
+    <details class="regbox"><summary>📋 매체 목록 <span class="rcnt" id="s_cnt"></span> · 수정/삭제</summary>
+      <div class="reglist" id="s_list"></div></details>
   </div>
   <div class="card">
     <h2>담당자 등록 <span class="pxbadge">nt_medium</span></h2>
@@ -148,7 +157,8 @@ details.add summary::-webkit-details-marker{display:none}
     <label>코드(nt_medium · traffic_X 형식 권장)</label><input id="m_code" placeholder="예: traffic_j" autocomplete="off">
     <div class="save-row"><button class="btn solid" id="m_add">＋ 담당자 등록</button></div>
     <div class="hint" id="m_hint"></div>
-    <div class="reglist" id="m_list"></div>
+    <details class="regbox"><summary>📋 담당자 목록 <span class="rcnt" id="m_cnt"></span> · 수정/삭제</summary>
+      <div class="reglist" id="m_list"></div></details>
   </div>
 </div><!-- /tab-admin -->
 
@@ -288,9 +298,13 @@ function kvRow(name,code,dk){   // dk: 'src'|'med'|'prod'
 function fillAdminHints(){
   var q=($('p_search')?$('p_search').value:'').trim().toLowerCase();
   var cp=allProducts();if(q)cp=cp.filter(function(p){return (p.name+' '+p.slug).toLowerCase().indexOf(q)>=0;});
-  if($('s_list'))$('s_list').innerHTML='<div class="ltitle">매체 목록 (수정/삭제)</div>'+(SOURCES.length?SOURCES.map(function(x){return kvRow(x.label,x.code,'src')}).join(''):'<span class="muted">없음</span>');
-  if($('m_list'))$('m_list').innerHTML='<div class="ltitle">담당자 목록 (수정/삭제)</div>'+(MEDIA.length?MEDIA.map(function(x){return kvRow(x.label,x.code,'med')}).join(''):'<span class="muted">없음</span>');
-  if($('p_list'))$('p_list').innerHTML='<div class="ltitle">제품 목록 ('+cp.length+'개'+(q?' 검색':'')+') · 수정/삭제</div>'+(cp.length?cp.slice(0,200).map(function(x){return kvRow(x.name,x.slug,'prod')}).join('')+(cp.length>200?'<div class="muted">…앞 200개만 표시(검색으로 좁히세요)</div>':''):'<span class="muted">없음</span>');}
+  if($('s_cnt'))$('s_cnt').textContent='('+SOURCES.length+')';
+  if($('m_cnt'))$('m_cnt').textContent='('+MEDIA.length+')';
+  if($('p_cnt'))$('p_cnt').textContent='('+allProducts().length+')';
+  if($('s_list'))$('s_list').innerHTML=SOURCES.length?SOURCES.map(function(x){return kvRow(x.label,x.code,'src')}).join(''):'<span class="muted">없음</span>';
+  if($('m_list'))$('m_list').innerHTML=MEDIA.length?MEDIA.map(function(x){return kvRow(x.label,x.code,'med')}).join(''):'<span class="muted">없음</span>';
+  if($('p_list'))$('p_list').innerHTML=cp.length?cp.slice(0,200).map(function(x){return kvRow(x.name,x.slug,'prod')}).join('')+(cp.length>200?'<div class="muted">…앞 200개만(검색으로 좁히기)</div>':''):'<span class="muted">'+(q?'검색 결과 없음':'없음')+'</span>';
+  var pd=$('p_list')&&$('p_list').closest?$('p_list').closest('details'):null;if(pd&&q)pd.open=true;}
 function delKV(kind,code){
   var isS=(kind==='source');var arr=isS?SOURCES:MEDIA;var it=arr.filter(function(x){return x.code===code})[0];if(!it)return;
   if(!confirm('"'+it.label+'" '+(isS?'매체':'담당자')+'를 삭제할까요?\n(이미 만든 링크엔 영향 없어요)'))return;
